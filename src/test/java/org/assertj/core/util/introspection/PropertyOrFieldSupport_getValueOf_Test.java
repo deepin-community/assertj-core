@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,35 +8,35 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util.introspection;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.assertj.core.test.Employee;
-import org.assertj.core.test.ExpectedException;
 import org.assertj.core.test.Name;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class PropertyOrFieldSupport_getValueOf_Test {
-  private static final Employee yoda = new Employee(1L, new Name("Yoda"), 800);
-  private PropertyOrFieldSupport propertyOrFieldSupport;
 
-  @Before
+  private PropertyOrFieldSupport propertyOrFieldSupport;
+  private Employee yoda;
+
+  @BeforeEach
   public void setup() {
     propertyOrFieldSupport = PropertyOrFieldSupport.EXTRACTION;
+    yoda = new Employee(1L, new Name("Yoda"), 800);
+    yoda.setRelation("padawan", new Employee(3L, new Name("Luke", "Skywalker"), 24));
   }
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void should_extract_property_value() {
@@ -54,9 +54,9 @@ public class PropertyOrFieldSupport_getValueOf_Test {
 
   @Test
   public void should_prefer_properties_over_fields() {
-    Object extractedValue = propertyOrFieldSupport.getValueOf("name", employeeWithOverridenName("Overriden Name"));
+    Object extractedValue = propertyOrFieldSupport.getValueOf("name", employeeWithOverriddenName("Overridden Name"));
 
-    assertThat(extractedValue).isEqualTo(new Name("Overriden Name"));
+    assertThat(extractedValue).isEqualTo(new Name("Overridden Name"));
   }
 
   @Test
@@ -99,45 +99,56 @@ public class PropertyOrFieldSupport_getValueOf_Test {
   }
 
   @Test
-  public void should_throw_error_when_no_property_nor_field_match_given_name() {
-    thrown.expect(IntrospectionError.class);
+  public void should_extract_value_from_nested_map() {
+    Employee darth = new Employee(1L, new Name("Darth", "Vader"), 100);
+    darth.setAttribute("side", "dark");
 
-    propertyOrFieldSupport.getValueOf("unknown", yoda);
+    Object value = propertyOrFieldSupport.getValueOf("attributes.side", darth);
+    assertThat(value).isEqualTo("dark");
+  }
+
+  @Test
+  public void should_extract_nested_property_field_within_nested_map() {
+    Object value = propertyOrFieldSupport.getValueOf("relations.padawan.name.first", yoda);
+    assertThat(value).isEqualTo("Luke");
+  }
+
+  @Test
+  public void should_throw_error_when_no_property_nor_field_match_given_name() {
+    assertThatExceptionOfType(IntrospectionError.class).isThrownBy(() -> propertyOrFieldSupport.getValueOf("unknown", yoda));
   }
 
   @Test
   public void should_throw_error_when_no_property_nor_public_field_match_given_name_if_extraction_is_limited_to_public_fields() {
-    thrown.expect(IntrospectionError.class);
+    assertThatExceptionOfType(IntrospectionError.class).isThrownBy(() -> {
+      propertyOrFieldSupport = new PropertyOrFieldSupport(new PropertySupport(),
+                                                          FieldSupport.EXTRACTION_OF_PUBLIC_FIELD_ONLY);
 
-    propertyOrFieldSupport = new PropertyOrFieldSupport(new PropertySupport(),
-                                                        FieldSupport.EXTRACTION_OF_PUBLIC_FIELD_ONLY);
-
-    propertyOrFieldSupport.getValueOf("city", yoda);
+      propertyOrFieldSupport.getValueOf("city", yoda);
+    });
   }
 
   @Test
   public void should_throw_exception_when_given_property_or_field_name_is_null() {
-    thrown.expectIllegalArgumentException("The name of the property/field to read should not be null");
-    propertyOrFieldSupport.getValueOf(null, yoda);
+    assertThatIllegalArgumentException().isThrownBy(() -> propertyOrFieldSupport.getValueOf(null, yoda))
+                                        .withMessage("The name of the property/field to read should not be null");
   }
 
   @Test
   public void should_throw_exception_when_given_name_is_empty() {
-    thrown.expectIllegalArgumentException("The name of the property/field to read should not be empty");
-    propertyOrFieldSupport.getValueOf("", yoda);
+    assertThatIllegalArgumentException().isThrownBy(() -> propertyOrFieldSupport.getValueOf("", yoda))
+                                        .withMessage("The name of the property/field to read should not be empty");
   }
 
   @Test
   public void should_throw_exception_if_property_cannot_be_extracted_due_to_runtime_exception_during_property_access() {
-    thrown.expect(IntrospectionError.class);
-
-    propertyOrFieldSupport.getValueOf("adult", brokenEmployee());
+    assertThatExceptionOfType(IntrospectionError.class).isThrownBy(() -> propertyOrFieldSupport.getValueOf("adult",
+                                                                                                           brokenEmployee()));
   }
 
   @Test
   public void should_throw_exception_if_no_object_is_given() {
-    thrown.expect(IllegalArgumentException.class);
-    propertyOrFieldSupport.getValueOf("name", null);
+    assertThatIllegalArgumentException().isThrownBy(() -> propertyOrFieldSupport.getValueOf("name", null));
   }
 
   @Test
@@ -161,6 +172,27 @@ public class PropertyOrFieldSupport_getValueOf_Test {
     assertThat(maps).extracting("bad key").containsExactly(null, null);
   }
 
+  @Test
+  public void should_extract_field_value_if_only_static_getter_matches_name() {
+    Object value = propertyOrFieldSupport.getValueOf("city", new StaticPropertyEmployee());
+
+    assertThat(value).isEqualTo("New York");
+  }
+
+  @Test
+  public void should_extract_field_value_if_only_static_is_method_matches_name() {
+    Object value = propertyOrFieldSupport.getValueOf("tall", new StaticBooleanPropertyEmployee());
+
+    assertThat(value).isEqualTo(false);
+  }
+
+  @Test
+  public void should_extract_field_value_if_only_static_bare_method_matches_name() {
+    Object value = propertyOrFieldSupport.getValueOf("city", new StaticBarePropertyEmployee());
+
+    assertThat(value).isEqualTo("New York");
+  }
+
   private Employee employeeWithBrokenName(String name) {
     return new Employee(1L, new Name(name), 0) {
       @Override
@@ -170,11 +202,11 @@ public class PropertyOrFieldSupport_getValueOf_Test {
     };
   }
 
-  private Employee employeeWithOverridenName(final String overridenName) {
+  private Employee employeeWithOverriddenName(final String overriddenName) {
     return new Employee(1L, new Name("Name"), 0) {
       @Override
       public Name getName() {
-        return new Name(overridenName);
+        return new Name(overriddenName);
       }
     };
   }
@@ -186,6 +218,26 @@ public class PropertyOrFieldSupport_getValueOf_Test {
         throw new IllegalStateException();
       }
     };
+  }
+
+  static class StaticPropertyEmployee extends Employee {
+    public static String getCity() {
+      return "London";
+    }
+  }
+
+  static class StaticBarePropertyEmployee extends Employee {
+    public static String city() {
+      return "London";
+    }
+  }
+
+  static class StaticBooleanPropertyEmployee extends Employee {
+    boolean tall = false;
+
+    public static boolean isTall() {
+      return true;
+    }
   }
 
 }

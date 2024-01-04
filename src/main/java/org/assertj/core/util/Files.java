@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,30 +8,25 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util;
 
 import static java.io.File.separator;
-import static java.lang.String.format;
-import static java.lang.String.valueOf;
 import static org.assertj.core.util.Arrays.isNullOrEmpty;
+import static org.assertj.core.util.Preconditions.checkArgument;
+import static org.assertj.core.util.Preconditions.checkNotNull;
 import static org.assertj.core.util.Strings.append;
 import static org.assertj.core.util.Strings.concat;
 import static org.assertj.core.util.Strings.quote;
-import static org.assertj.core.util.Preconditions.checkNotNull;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.assertj.core.api.exception.RuntimeIOException;
+import java.util.UUID;
 
 /**
  * Utility methods related to files.
@@ -50,9 +45,7 @@ public class Files {
    */
   public static List<String> fileNamesIn(String dirName, boolean recurse) {
     File dir = new File(dirName);
-    if (!dir.isDirectory()) {
-      throw new IllegalArgumentException(format("%s is not a directory", quote(dirName)));
-    }
+    checkArgument(dir.isDirectory(), "%s is not a directory", quote(dirName));
     return fileNamesIn(dir, recurse);
   }
 
@@ -88,12 +81,12 @@ public class Files {
    * Returns the system's temporary directory.
    * 
    * @return the system's temporary directory.
-   * @throws RuntimeIOException if this method cannot find or create the system's temporary directory.
+   * @throws RuntimeException if this method cannot find or create the system's temporary directory.
    */
   public static File temporaryFolder() {
     File temp = new File(temporaryFolderPath());
     if (!temp.isDirectory()) {
-      throw new RuntimeIOException("Unable to find temporary directory");
+      throw new RuntimeException("Unable to find temporary directory");
     }
     return temp;
   }
@@ -110,23 +103,23 @@ public class Files {
 
   /**
    * Creates a new file in the system's temporary directory. The name of the file will be the result of:
-   * <pre><code class='java'> concat(String.valueOf(System.currentTimeMillis()), &quot;.txt&quot;);</code></pre>
+   * <pre><code class='java'> concat(UUID.randomUUID().toString(), &quot;.txt&quot;);</code></pre>
    * 
    * @return the created file.
    */
   public static File newTemporaryFile() {
-    String tempFileName = concat(valueOf(System.currentTimeMillis()), ".txt");
+    String tempFileName = concat(UUID.randomUUID().toString(), ".txt");
     return newFile(concat(temporaryFolderPath(), tempFileName));
   }
 
   /**
    * Creates a new directory in the system's temporary directory. The name of the directory will be the result of:
-   * <pre><code class='java'> System.currentTimeMillis();</code></pre>
+   * <pre><code class='java'> UUID.randomUUID().toString();</code></pre>
    * 
    * @return the created file.
    */
   public static File newTemporaryFolder() {
-    String tempFileName = String.valueOf(System.currentTimeMillis());
+    String tempFileName = UUID.randomUUID().toString();
     return newFolder(concat(temporaryFolderPath(), tempFileName));
   }
 
@@ -135,9 +128,9 @@ public class Files {
    * 
    * @param path the path of the new file.
    * @return the new created file.
-   * @throws RuntimeIOException if the path belongs to an existing non-empty directory.
-   * @throws RuntimeIOException if the path belongs to an existing file.
-   * @throws RuntimeIOException if any I/O error is thrown when creating the new file.
+   * @throws RuntimeException if the path belongs to an existing non-empty directory.
+   * @throws RuntimeException if the path belongs to an existing file.
+   * @throws UncheckedIOException if any I/O error is thrown when creating the new file.
    */
   public static File newFile(String path) {
     File file = createFileIfPathIsNotANonEmptyDirectory(path);
@@ -156,9 +149,9 @@ public class Files {
    * 
    * @param path the path of the new directory.
    * @return the new created directory.
-   * @throws RuntimeIOException if the path belongs to an existing non-empty directory.
-   * @throws RuntimeIOException if the path belongs to an existing file.
-   * @throws RuntimeIOException if any I/O error is thrown when creating the new directory.
+   * @throws RuntimeException if the path belongs to an existing non-empty directory.
+   * @throws RuntimeException if the path belongs to an existing file.
+   * @throws RuntimeException if any I/O error is thrown when creating the new directory.
    */
   public static File newFolder(String path) {
     File file = createFileIfPathIsNotANonEmptyDirectory(path);
@@ -180,36 +173,39 @@ public class Files {
     return file;
   }
 
-  private static RuntimeIOException cannotCreateNewFile(String path, String reason) {
+  private static UncheckedIOException cannotCreateNewFile(String path, String reason) {
     throw cannotCreateNewFile(path, reason, null);
   }
 
-  private static RuntimeIOException cannotCreateNewFile(String path, Exception cause) {
+  private static UncheckedIOException cannotCreateNewFile(String path, Exception cause) {
     throw cannotCreateNewFile(path, null, cause);
   }
 
-  private static RuntimeIOException cannotCreateNewFile(String path, String reason, Exception cause) {
+  private static UncheckedIOException cannotCreateNewFile(String path, String reason, Exception cause) {
     String message = String.format("Unable to create the new file %s", quote(path));
     if (!Strings.isNullOrEmpty(reason)) {
       message = concat(message, ": ", reason);
     }
-    if (cause != null) {
-      throw new RuntimeIOException(message, cause);
+    if (cause == null) {
+      throw new RuntimeException(message);
     }
-    throw new RuntimeIOException(message);
+    if (cause instanceof IOException) {
+      throw new UncheckedIOException(message, (IOException) cause);
+    }
+    throw new RuntimeException(message, cause);
   }
 
   /**
    * Returns the current directory.
    * 
    * @return the current directory.
-   * @throws RuntimeIOException if the current directory cannot be obtained.
+   * @throws UncheckedIOException if the current directory cannot be obtained.
    */
   public static File currentFolder() {
     try {
       return new File(".").getCanonicalFile();
     } catch (IOException e) {
-      throw new RuntimeIOException("Unable to get current directory", e);
+      throw new UncheckedIOException("Unable to get current directory", e);
     }
   }
 
@@ -242,12 +238,10 @@ public class Files {
    * @param charsetName the name of the character set to use.
    * @return the content of the file.
    * @throws IllegalArgumentException if the given character set is not supported on this platform.
-   * @throws RuntimeIOException if an I/O exception occurs.
+   * @throws UncheckedIOException if an I/O exception occurs.
    */
   public static String contentOf(File file, String charsetName) {
-    if (!Charset.isSupported(charsetName)) {
-      throw new IllegalArgumentException(String.format("Charset:<'%s'> is not supported on this system", charsetName));
-    }
+    checkArgumentCharsetIsSupported(charsetName);
     return contentOf(file, Charset.forName(charsetName));
   }
 
@@ -258,39 +252,14 @@ public class Files {
    * @param charset the character set to use.
    * @return the content of the file.
    * @throws NullPointerException if the given charset is {@code null}.
-   * @throws RuntimeIOException if an I/O exception occurs.
+   * @throws UncheckedIOException if an I/O exception occurs.
    */
   public static String contentOf(File file, Charset charset) {
     checkNotNull(charset, "The charset should not be null");
     try {
-      return loadContents(file, charset);
+      return new String(java.nio.file.Files.readAllBytes(file.toPath()), charset);
     } catch (IOException e) {
-      throw new RuntimeIOException("Unable to read " + file.getAbsolutePath(), e);
-    }
-  }
-
-  private static String loadContents(File file, Charset charset) throws IOException {
-    BufferedReader reader = null;
-    boolean threw = true;
-    try {
-      reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), charset));
-      StringWriter writer = new StringWriter();
-      int c;
-      while ((c = reader.read()) != -1) {
-        writer.write(c);
-      }
-      threw = false;
-      return writer.toString();
-    } finally {
-      if (reader != null) {
-        try {
-          reader.close();
-        } catch (IOException e) {
-          if (!threw) {
-            throw e; // if there was an initial exception, don't hide it
-          }
-        }
-      }
+      throw new UncheckedIOException("Unable to read " + file.getAbsolutePath(), e);
     }
   }
 
@@ -302,14 +271,14 @@ public class Files {
    * @param charset the character set to use.
    * @return the content of the file.
    * @throws NullPointerException if the given charset is {@code null}.
-   * @throws RuntimeIOException if an I/O exception occurs.
+   * @throws UncheckedIOException if an I/O exception occurs.
    */
   public static List<String> linesOf(File file, Charset charset) {
     checkNotNull(charset, "The charset should not be null");
     try {
-      return loadLines(file, charset);
+      return java.nio.file.Files.readAllLines(file.toPath(), charset);
     } catch (IOException e) {
-      throw new RuntimeIOException("Unable to read " + file.getAbsolutePath(), e);
+      throw new UncheckedIOException("Unable to read " + file.getAbsolutePath(), e);
     }
   }
 
@@ -321,43 +290,15 @@ public class Files {
    * @param charsetName the name of the character set to use.
    * @return the content of the file.
    * @throws NullPointerException if the given charset is {@code null}.
-   * @throws RuntimeIOException if an I/O exception occurs.
+   * @throws UncheckedIOException if an I/O exception occurs.
    */
   public static List<String> linesOf(File file, String charsetName) {
-    if (!Charset.isSupported(charsetName)) {
-      throw new IllegalArgumentException(String.format("Charset:<'%s'> is not supported on this system", charsetName));
-    }
+    checkArgumentCharsetIsSupported(charsetName);
     return linesOf(file, Charset.forName(charsetName));
   }
 
-  private static List<String> loadLines(File file, Charset charset) throws IOException {
-    BufferedReader reader = null;
-    boolean threw = true;
-    try {
-      reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), charset));
-
-      List<String> strings = Lists.newArrayList();
-
-      String line = reader.readLine();
-      while (line != null) {
-        strings.add(line);
-        line = reader.readLine();
-      }
-
-      threw = false;
-      return strings;
-    } finally {
-      if (reader != null) {
-        try {
-          reader.close();
-        } catch (IOException e) {
-          if (!threw) {
-            throw e; // if there was an initial exception, don't hide it
-          }
-        }
-      }
-    }
-
+  private static void checkArgumentCharsetIsSupported(String charsetName) {
+    checkArgument(Charset.isSupported(charsetName), "Charset:<'%s'> is not supported on this system", charsetName);
   }
 
   private Files() {

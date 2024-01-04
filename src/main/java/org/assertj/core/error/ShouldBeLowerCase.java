@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.error;
 
@@ -24,11 +24,11 @@ public class ShouldBeLowerCase extends BasicErrorMessageFactory {
    * @param actual the actual value in the failed assertion.
    * @return the created {@code ErrorMessageFactory}.
    */
-  public static ErrorMessageFactory shouldBeLowerCase(Character actual) {
+  public static ErrorMessageFactory shouldBeLowerCase(Object actual) {
     return new ShouldBeLowerCase(actual);
   }
 
-  private ShouldBeLowerCase(Character actual) {
-    super("%nExpecting <%s> to be a lowercase character", actual);
+  private ShouldBeLowerCase(Object actual) {
+    super("%nExpecting <%s> to be a lowercase", actual);
   }
 }

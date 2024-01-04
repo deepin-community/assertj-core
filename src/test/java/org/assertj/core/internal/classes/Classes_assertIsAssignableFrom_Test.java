@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,20 +8,20 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.classes;
 
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.error.ShouldBeAssignableFrom.shouldBeAssignableFrom;
 import static org.assertj.core.test.TestData.someInfo;
-import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
-import static org.mockito.Mockito.verify;
 
-import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.ClassesBaseTest;
 import org.assertj.core.util.Sets;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for
@@ -41,15 +41,15 @@ public class Classes_assertIsAssignableFrom_Test extends ClassesBaseTest {
   @Test
   public void should_fail_if_given_classes_are_empty() {
     actual = Jedi.class;
-    thrown.expectIllegalArgumentException("Expecting at least one Class to be specified");
-    classes.assertIsAssignableFrom(someInfo(), actual);
+    assertThatIllegalArgumentException().isThrownBy(() -> classes.assertIsAssignableFrom(someInfo(), actual))
+                                        .withMessage("Expecting at least one Class to be specified");
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
     actual = null;
-    thrown.expectAssertionError(actualIsNull());
-    classes.assertIsAssignableFrom(someInfo(), actual);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> classes.assertIsAssignableFrom(someInfo(), actual))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
@@ -60,18 +60,12 @@ public class Classes_assertIsAssignableFrom_Test extends ClassesBaseTest {
 
   @Test
   public void should_fail_if_actual_is_not_assignable_from() {
-    AssertionInfo info = someInfo();
     actual = HumanJedi.class;
     Class<?>[] expected = new Class[] { HumanJedi.class, Jedi.class };
-    try {
-      classes.assertIsAssignableFrom(someInfo(), actual, expected);
-    } catch (AssertionError e) {
-      verify(failures).failure(
-          info,
-          shouldBeAssignableFrom(actual, Sets.<Class<?>> newLinkedHashSet(expected),
-              Sets.<Class<?>> newLinkedHashSet(Jedi.class)));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> classes.assertIsAssignableFrom(someInfo(), actual,
+                                                                                                    expected))
+                                                   .withMessage(format(shouldBeAssignableFrom(actual,
+                                                                                              Sets.<Class<?>> newLinkedHashSet(expected),
+                                                                                              Sets.<Class<?>> newLinkedHashSet(Jedi.class)).create()));
   }
 }

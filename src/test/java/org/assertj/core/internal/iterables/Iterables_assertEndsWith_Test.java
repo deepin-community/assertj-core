@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,41 +8,40 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.iterables;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldEndWith.shouldEndWith;
-import static org.assertj.core.test.ErrorMessages.valuesToLookForIsNull;
+import static org.assertj.core.internal.ErrorMessages.valuesToLookForIsNull;
 import static org.assertj.core.test.ObjectArrays.emptyArray;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
 import static org.assertj.core.util.Arrays.array;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
 import static org.assertj.core.util.Lists.newArrayList;
-
 import static org.mockito.Mockito.verify;
-
-import java.util.Collection;
-
-import org.junit.Before;
-import org.junit.Test;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.Iterables;
 import org.assertj.core.internal.IterablesBaseTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 
 /**
- * Tests for <code>{@link Iterables#assertEndsWith(AssertionInfo, Collection, Object[])}</code>.
- * 
+ * Tests for <code>{@link Iterables#assertEndsWith(AssertionInfo, Iterable, Object[])}</code>.
+ *
  * @author Alex Ruiz
  * @author Joel Costigliola
+ * @author Florent Biville
  */
 public class Iterables_assertEndsWith_Test extends IterablesBaseTest {
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() {
     super.setUp();
     actual = newArrayList("Yoda", "Luke", "Leia", "Obi-Wan");
@@ -50,8 +49,8 @@ public class Iterables_assertEndsWith_Test extends IterablesBaseTest {
 
   @Test
   public void should_throw_error_if_sequence_is_null() {
-    thrown.expectNullPointerException(valuesToLookForIsNull());
-    iterables.assertEndsWith(someInfo(), actual, null);
+    assertThatNullPointerException().isThrownBy(() -> iterables.assertEndsWith(someInfo(), actual, null))
+                                    .withMessage(valuesToLookForIsNull());
   }
 
   @Test
@@ -61,15 +60,14 @@ public class Iterables_assertEndsWith_Test extends IterablesBaseTest {
   }
   
   @Test
-  public void should_fail_if_sequence_to_look_for_is_empty_and_actual_is_not() {
-    thrown.expect(AssertionError.class);
+  public void should_pass_if_sequence_to_look_for_is_empty_and_actual_is_not() {
     iterables.assertEndsWith(someInfo(), actual, emptyArray());
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    iterables.assertEndsWith(someInfo(), null, array("Yoda"));
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> iterables.assertEndsWith(someInfo(), null, array("Yoda")))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test

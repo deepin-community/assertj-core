@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
@@ -17,8 +17,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.assertj.core.description.Description;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link WritableAssertionInfo#toString()}</code>.
@@ -31,7 +31,7 @@ public class WritableAssertionInfo_toString_Test {
   private String overridingErrorMessage;
   private WritableAssertionInfo info;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     description = mock(Description.class);
     overridingErrorMessage = "Jedi";
@@ -43,6 +43,6 @@ public class WritableAssertionInfo_toString_Test {
   @Test
   public void should_implement_toString() {
     when(description.value()).thenReturn("Yoda");
-    assertThat(info.toString()).isEqualTo("WritableAssertionInfo[overridingErrorMessage='Jedi', description='Yoda']");
+    assertThat(info).hasToString("WritableAssertionInfo[overridingErrorMessage='Jedi', description='Yoda', representation=StandardRepresentation]");
   }
 }

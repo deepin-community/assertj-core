@@ -1,3 +1,20 @@
+assertj-core (3.14.0-2) unstable; urgency=medium
+
+  * Don't build the module-info class
+  * Set the source encoding to UTF-8
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 11 Oct 2022 09:05:14 +0200
+
+assertj-core (3.14.0-1) unstable; urgency=medium
+
+  * New upstream release
+    - Updated the Maven rules
+  * Standards-Version updated to 4.6.1
+  * Switch to debhelper level 13
+  * Use salsa.debian.org Vcs-* URLs
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Mon, 10 Oct 2022 13:14:51 +0200
+
 assertj-core (2.3.0-4) unstable; urgency=medium
 
   * Added the missing build dependency on junit4 (Closes: #866552)

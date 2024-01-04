@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,12 +8,13 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api.date;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.test.ExpectedException.none;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -21,19 +22,17 @@ import java.util.Date;
 import org.assertj.core.api.DateAssert;
 import org.assertj.core.api.DateAssertBaseTest;
 import org.assertj.core.internal.Dates;
-import org.assertj.core.test.ExpectedException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Abstract class that factorize DateAssert tests with a date arg (either Date or String based).
  * <p/>
  * For the most part, date assertion tests are (whatever the concrete date assertion method invoked is) :
  * <ul>
- * <li>successfull assertion test with a date</li>
- * <li>successfull assertion test with a date as string following default date format</li>
- * <li>successfull assertion test with a date as string following custom date format</li>
+ * <li>successful assertion test with a date</li>
+ * <li>successful assertion test with a date as string following default date format</li>
+ * <li>successful assertion test with a date as string following custom date format</li>
  * <li>failed assertion test when date as string does not follow the expected date format</li>
  * <li>checking that DateAssert instance used for assertions is returned to allow fluent assertions chaining</li>
  * </ul>
@@ -44,8 +43,6 @@ import org.junit.Test;
  */
 public abstract class AbstractDateAssertWithDateArg_Test extends DateAssertBaseTest {
 
-  @Rule
-  public ExpectedException thrown = none();
   protected Date otherDate;
   protected String dateAsStringWithDefaultFormat;
   protected String dateAsStringWithCustomFormat;
@@ -53,7 +50,7 @@ public abstract class AbstractDateAssertWithDateArg_Test extends DateAssertBaseT
   protected SimpleDateFormat customDateFormat;
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() {
     super.setUp();
     customDateFormat = new SimpleDateFormat("dd/MM/yyyy");
@@ -85,13 +82,15 @@ public abstract class AbstractDateAssertWithDateArg_Test extends DateAssertBaseT
 
   @Test
   public void should_fail_because_date_string_representation_does_not_follow_expected_format() {
-    thrown.expectAssertionError(String.format("Failed to parse " + dateAsStringWithBadFormat
-                                              + " with any of these date formats:%n" +
-                                              "   [yyyy-MM-dd'T'HH:mm:ss.SSS,%n" +
-                                              "    yyyy-MM-dd HH:mm:ss.SSS,%n" +
-                                              "    yyyy-MM-dd'T'HH:mm:ss,%n" +
-                                              "    yyyy-MM-dd]"));
-    assertionInvocationWithStringArg(dateAsStringWithBadFormat);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> assertionInvocationWithStringArg(dateAsStringWithBadFormat))
+                                                   .withMessage(format("Failed to parse " + dateAsStringWithBadFormat +
+                                                                       " with any of these date formats:%n" +
+                                                                       "   [yyyy-MM-dd'T'HH:mm:ss.SSSX,%n" +
+                                                                       "    yyyy-MM-dd'T'HH:mm:ss.SSS,%n" +
+                                                                       "    yyyy-MM-dd HH:mm:ss.SSS,%n" +
+                                                                       "    yyyy-MM-dd'T'HH:mm:ssX,%n" +
+                                                                       "    yyyy-MM-dd'T'HH:mm:ss,%n" +
+                                                                       "    yyyy-MM-dd]"));
   }
 
   @Test

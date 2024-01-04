@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,24 +8,29 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.BDDAssertions.and;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenObject;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 
 import java.math.BigDecimal;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Spliterator;
+import java.util.stream.Stream;
 
-import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link org.assertj.core.api.BDDAssertions#then(String)}</code>.
@@ -34,11 +39,16 @@ import org.junit.Test;
  */
 public class BDDAssertions_then_Test {
 
+  private AssertFactory<String, StringAssert> stringAssertFactory = StringAssert::new;
+
+  private AssertFactory<Integer, IntegerAssert> integerAssertFactory = IntegerAssert::new;
+
   @Test
   public void then_char() {
     then('z').isGreaterThan('a');
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   public void then_Character() {
     then(new Character('A')).isEqualTo(new Character('A'));
@@ -60,7 +70,7 @@ public class BDDAssertions_then_Test {
   }
 
   @Test
-  public void should_delegate_to_assert_comparable() throws Exception {
+  public void should_delegate_to_assert_comparable() {
 
     class IntBox implements Comparable<IntBox> {
 
@@ -83,12 +93,14 @@ public class BDDAssertions_then_Test {
   public void then_Iterable() {
     Iterable<String> iterable = Arrays.asList("1");
     then(iterable).contains("1");
+    then(iterable, StringAssert.class).first().startsWith("1");
+    then(iterable, stringAssertFactory).first().startsWith("1");
   }
 
   @Test
   public void then_Iterator() {
-    Iterator<String> iterator = Arrays.asList("1").iterator();
-    then(iterator).contains("1");
+    Iterator<String> iterator = singletonList("1").iterator();
+    then(iterator).hasNext();
   }
 
   @Test
@@ -218,12 +230,15 @@ public class BDDAssertions_then_Test {
 
   @Test
   public void then_List() {
-    then(asList(5, 6)).hasSize(2);
+    List<Integer> list = asList(5, 6);
+    then(list).hasSize(2);
+    then(list, IntegerAssert.class).first().isLessThan(10);
+    then(list, integerAssertFactory).first().isLessThan(10);
   }
 
   @Test
   public void then_String() {
-    then("Foo").isEqualTo("Foo");
+    then("Foo").isEqualTo("Foo").isGreaterThan("Bar");
   }
 
   @Test
@@ -238,28 +253,40 @@ public class BDDAssertions_then_Test {
 
   @Test
   public void should_build_ThrowableAssert_with_throwable_thrown() {
-    thenThrownBy(new ThrowingCallable() {
-      @Override
-      public void call() throws Throwable {
-        throw new Throwable("something was wrong");
-      }
+    thenThrownBy(() -> {
+      throw new Throwable("something was wrong");
     }).isInstanceOf(Throwable.class)
       .hasMessage("something was wrong");
   }
 
+  @Test
   public void should_build_ThrowableAssert_with_throwable_thrown_with_format_string() {
-    thenThrownBy(new ThrowingCallable() {
-      @Override
-      public void call() throws Throwable {
-        throw new Throwable("something was wrong");
-      }
+    thenThrownBy(() -> {
+      throw new Throwable("something was wrong");
     }).isInstanceOf(Throwable.class)
-            .hasMessage("something was %s", "wrong");
+      .hasMessage("something was %s", "wrong");
   }
 
   @Test
-  public void then_URI() throws URISyntaxException {
-    then(new URI("http://assertj.org")).hasNoPort();
+  public void then_explicit_Object() {
+    thenObject(new LinkedList<>()).matches(l -> l.peek() == null);
   }
 
+  @Test
+  public void then_URI() {
+    then(URI.create("http://assertj.org")).hasNoPort();
+  }
+
+  @Test
+  public void then_Spliterator() {
+    Spliterator<Integer> spliterator = Stream.of(1, 2).spliterator();
+    then(spliterator).hasCharacteristics(Spliterator.SIZED);
+  }
+
+  @SuppressWarnings("static-access")
+  @Test
+  public void and_then() {
+    and.then(true).isNotEqualTo(false);
+    and.then(1L).isEqualTo(1L);
+  }
 }

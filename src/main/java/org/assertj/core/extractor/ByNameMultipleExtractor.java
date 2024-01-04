@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,56 +8,45 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.extractor;
 
-import java.util.ArrayList;
-import java.util.List;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.util.Preconditions.checkArgument;
 
-import org.assertj.core.api.iterable.Extractor;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+
 import org.assertj.core.groups.Tuple;
 
-class ByNameMultipleExtractor<T> implements Extractor<T, Tuple>{
+public class ByNameMultipleExtractor<T> implements Function<T, Tuple>{
 
   private final String[] fieldsOrProperties;
 
-  ByNameMultipleExtractor(String... fieldsOrProperties) {
+  public ByNameMultipleExtractor(String... fieldsOrProperties) {
     this.fieldsOrProperties = fieldsOrProperties;
   }
 
   @Override
-  public Tuple extract(T input) {
-    if (fieldsOrProperties == null)
-      throw new IllegalArgumentException("The names of the fields/properties to read should not be null");
-    if (fieldsOrProperties.length == 0)
-      throw new IllegalArgumentException("The names of the fields/properties to read should not be empty");
-    if (input == null)
-      throw new IllegalArgumentException("The object to extract fields/properties from should not be null");
+  public Tuple apply(T input) {
+    checkArgument(fieldsOrProperties != null, "The names of the fields/properties to read should not be null");
+    checkArgument(fieldsOrProperties.length > 0, "The names of the fields/properties to read should not be empty");
+    checkArgument(input != null, "The object to extract fields/properties from should not be null");
 
-    List<Extractor<T, Object>> extractors = buildExtractors();
+    List<Function<T, Object>> extractors = buildExtractors();
     List<Object> values = extractValues(input, extractors);
     
     return new Tuple(values.toArray());
   }
 
-  private List<Object> extractValues(T input, List<Extractor<T, Object>> singleExtractors) {
-    List<Object> values = new ArrayList<>();
-    
-    for (Extractor<T, Object> extractor : singleExtractors) {
-      values.add(extractor.extract(input));
-    }
-    return values;
+  private List<Object> extractValues(T input, List<Function<T, Object>> singleExtractors) {
+    return singleExtractors.stream().map(extractor -> extractor.apply(input)).collect(toList());
   }
 
-  private List<Extractor<T, Object>> buildExtractors() {
-    List<Extractor<T, Object>> result = new ArrayList<>();
-    
-    for (String name : fieldsOrProperties) {
-      result.add(new ByNameSingleExtractor<T>(name));
-    }
-    
-    return result;
+  private List<Function<T, Object>> buildExtractors() {
+    return Arrays.stream(fieldsOrProperties).map(ByNameSingleExtractor<T>::new).collect(toList());
   }
 
 }

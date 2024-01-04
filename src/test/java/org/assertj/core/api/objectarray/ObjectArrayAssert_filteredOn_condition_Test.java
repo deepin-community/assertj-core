@@ -1,6 +1,4 @@
-package org.assertj.core.api.objectarray;
-
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -10,23 +8,25 @@ package org.assertj.core.api.objectarray;
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
+package org.assertj.core.api.objectarray;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.not;
 
 import org.assertj.core.api.Condition;
 import org.assertj.core.test.Employee;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ObjectArrayAssert_filteredOn_condition_Test extends ObjectArrayAssert_filtered_baseTest {
 
   protected Condition<Employee> oldEmployees;
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() {
     super.setUp();
     oldEmployees = new Condition<Employee>("old employees") {
@@ -49,8 +49,10 @@ public class ObjectArrayAssert_filteredOn_condition_Test extends ObjectArrayAsse
 
   @Test
   public void should_fail_if_given_condition_is_null() {
-    thrown.expectIllegalArgumentException("The filter condition should not be null");
-    assertThat(employees).filteredOn(null);
+    assertThatIllegalArgumentException().isThrownBy(() -> {
+      oldEmployees = null;
+      assertThat(employees).filteredOn(oldEmployees);
+    }).withMessage("The filter condition should not be null");
   }
 
 }

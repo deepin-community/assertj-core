@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.throwables;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldHaveCauseExactlyInstance.shouldHaveCauseExactlyInstance;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
@@ -20,7 +22,7 @@ import static org.mockito.Mockito.verify;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.ThrowablesBaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for
@@ -34,24 +36,26 @@ public class Throwables_assertHasCauseExactlyInstanceOf_Test extends ThrowablesB
   private Throwable throwableWithCause = new Throwable(new IllegalArgumentException());
 
   @Test
-  public void should_pass_if_cause_is_exactly_instance_of_expected_type() throws Exception {
+  public void should_pass_if_cause_is_exactly_instance_of_expected_type() {
     throwables.assertHasCauseExactlyInstanceOf(someInfo(), throwableWithCause, IllegalArgumentException.class);
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    throwables.assertHasCauseExactlyInstanceOf(someInfo(), null, IllegalArgumentException.class);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> throwables.assertHasCauseExactlyInstanceOf(someInfo(), null, IllegalArgumentException.class))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
-  public void should_throw_NullPointerException_if_given_type_is_null() throws Exception {
-    thrown.expectNullPointerException("The given type should not be null");
-    throwables.assertHasCauseExactlyInstanceOf(someInfo(), throwableWithCause, null);
+  public void should_throw_NullPointerException_if_given_type_is_null() {
+    assertThatNullPointerException().isThrownBy(() -> throwables.assertHasCauseExactlyInstanceOf(someInfo(),
+                                                                                                 throwableWithCause,
+                                                                                                 null))
+                                    .withMessage("The given type should not be null");
   }
 
   @Test
-  public void should_fail_if_actual_has_no_cause() throws Exception {
+  public void should_fail_if_actual_has_no_cause() {
     AssertionInfo info = someInfo();
     Class<NullPointerException> expectedCauseType = NullPointerException.class;
     try {
@@ -64,7 +68,7 @@ public class Throwables_assertHasCauseExactlyInstanceOf_Test extends ThrowablesB
   }  
 
   @Test
-  public void should_fail_if_cause_is_not_instance_of_expected_type() throws Exception {
+  public void should_fail_if_cause_is_not_instance_of_expected_type() {
     AssertionInfo info = someInfo();
     Class<NullPointerException> expectedCauseType = NullPointerException.class;
     try {
@@ -77,7 +81,7 @@ public class Throwables_assertHasCauseExactlyInstanceOf_Test extends ThrowablesB
   }
 
   @Test
-  public void should_fail_if_cause_is_not_exactly_instance_of_expected_type() throws Exception {
+  public void should_fail_if_cause_is_not_exactly_instance_of_expected_type() {
     AssertionInfo info = someInfo();
     Class<RuntimeException> expectedCauseType = RuntimeException.class;
     try {

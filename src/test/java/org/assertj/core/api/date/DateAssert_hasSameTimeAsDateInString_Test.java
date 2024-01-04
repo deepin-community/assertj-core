@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,13 +8,14 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api.date;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.test.ErrorMessages.dateToCompareActualWithIsNull;
-import static org.assertj.core.test.ExpectedException.none;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.assertj.core.internal.ErrorMessages.dateToCompareActualWithIsNull;
 import static org.assertj.core.util.DateUtil.parseDatetime;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
 
@@ -22,9 +23,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 import org.assertj.core.api.DateAssertBaseTest;
-import org.assertj.core.test.ExpectedException;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link org.assertj.core.api.DateAssert#hasSameTimeAs(String)} </code>.
@@ -32,9 +31,6 @@ import org.junit.Test;
  * @author Michal Kordas
  */
 public class DateAssert_hasSameTimeAsDateInString_Test extends DateAssertBaseTest {
-
-  @Rule
-  public ExpectedException thrown = none();
 
   @Test
   public void should_verify_that_date_has_time_same_as_string_from_timestamp() {
@@ -52,21 +48,18 @@ public class DateAssert_hasSameTimeAsDateInString_Test extends DateAssertBaseTes
   @Test
   public void should_fail_when_checking_if_date_has_same_time_as_other_date() {
     Date date = parseDatetime("2003-04-26T12:00:00");
-    thrown.expect(AssertionError.class);
-    assertThat(date).hasSameTimeAs("2003-04-27T12:00:00");
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> assertThat(date).hasSameTimeAs("2003-04-27T12:00:00"));
   }
 
   @Test
   public void should_fail_when_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-
-    assertThat((Date) null).hasSameTimeAs("2003-04-26T12:00:00");
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> assertThat((Date) null).hasSameTimeAs("2003-04-26T12:00:00"))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
   public void should_throw_exception_when_date_is_null() {
-    thrown.expectNullPointerException(dateToCompareActualWithIsNull());
-
-    assertThat(new Date()).hasSameTimeAs((String) null);
+    assertThatNullPointerException().isThrownBy(() -> assertThat(new Date()).hasSameTimeAs((String) null))
+                                    .withMessage(dateToCompareActualWithIsNull());
   }
 }

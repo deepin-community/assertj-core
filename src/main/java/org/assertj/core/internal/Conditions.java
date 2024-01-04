@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,24 +8,25 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
+import static java.lang.String.format;
 import static org.assertj.core.error.ShouldBe.shouldBe;
 import static org.assertj.core.error.ShouldHave.shouldHave;
 import static org.assertj.core.error.ShouldNotBe.shouldNotBe;
 import static org.assertj.core.error.ShouldNotHave.shouldNotHave;
+import static org.assertj.core.error.ShouldSatisfy.shouldSatisfy;
 import static org.assertj.core.util.Preconditions.checkNotNull;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.api.Condition;
 import org.assertj.core.util.VisibleForTesting;
 
-
 /**
  * Verifies that a value satisfies a <code>{@link Condition}</code>.
- * 
+ *
  * @author Alex Ruiz
  */
 public class Conditions {
@@ -57,8 +58,7 @@ public class Conditions {
    */
   public <T> void assertIs(AssertionInfo info, T actual, Condition<? super T> condition) {
     assertIsNotNull(condition);
-    if (condition.matches(actual)) return;
-    throw failures.failure(info, shouldBe(actual, condition));
+    if (!condition.matches(actual)) throw failures.failure(info, shouldBe(actual, condition));
   }
 
   /**
@@ -72,8 +72,7 @@ public class Conditions {
    */
   public <T> void assertIsNot(AssertionInfo info, T actual, Condition<? super T> condition) {
     assertIsNotNull(condition);
-    if (!condition.matches(actual)) return;
-    throw failures.failure(info, shouldNotBe(actual, condition));
+    if (condition.matches(actual)) throw failures.failure(info, shouldNotBe(actual, condition));
   }
 
   /**
@@ -87,8 +86,7 @@ public class Conditions {
    */
   public <T> void assertHas(AssertionInfo info, T actual, Condition<? super T> condition) {
     assertIsNotNull(condition);
-    if (condition.matches(actual)) return;
-    throw failures.failure(info, shouldHave(actual, condition));
+    if (!condition.matches(actual)) throw failures.failure(info, shouldHave(actual, condition));
   }
 
   /**
@@ -102,16 +100,31 @@ public class Conditions {
    */
   public <T> void assertDoesNotHave(AssertionInfo info, T actual, Condition<? super T> condition) {
     assertIsNotNull(condition);
-    if (!condition.matches(actual)) return;
-    throw failures.failure(info, shouldNotHave(actual, condition));
+    if (condition.matches(actual)) throw failures.failure(info, shouldNotHave(actual, condition));
+  }
+
+  public <T> void assertSatisfies(AssertionInfo info, T actual, Condition<? super T> condition) {
+    assertIsNotNull(condition);
+    if (!condition.matches(actual)) throw failures.failure(info, shouldSatisfy(actual, condition));
   }
 
   /**
-   * Asserts the the given <code>{@link Condition}</code> is not null.
+   * Asserts the given <code>{@link Condition}</code> is not null.
    * @param condition the given {@code Condition}.
    * @throws NullPointerException if the given {@code Condition} is {@code null}.
    */
   public void assertIsNotNull(Condition<?> condition) {
-    checkNotNull(condition, "The condition to evaluate should not be null");
+    assertIsNotNull(condition, "The condition to evaluate should not be null");
+  }
+
+  /**
+   * Asserts the given <code>{@link Condition}</code> is not null.
+   * @param condition the given {@code Condition}.
+   * @param format as in {@link String#format(String, Object...)}
+   * @param args as in {@link String#format(String, Object...)}
+   * @throws NullPointerException if the given {@code Condition} is {@code null}.
+   */
+  public void assertIsNotNull(Condition<?> condition, String format, Object... args) {
+    checkNotNull(condition, format(format, args));
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,26 +8,28 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
-import static java.lang.String.format;
+import static org.assertj.core.util.Preconditions.checkArgument;
 import static org.assertj.core.util.Preconditions.checkNotNull;
 
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.file.ClosedFileSystemException;
 import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.ProviderMismatchException;
 import java.nio.file.spi.FileSystemProvider;
+import java.security.MessageDigest;
+import java.util.function.Predicate;
 
 import org.assertj.core.api.exception.PathsException;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.assertj.core.internal.Paths;
+import org.assertj.core.util.CheckReturnValue;
 import org.assertj.core.util.VisibleForTesting;
 
 /**
@@ -50,7 +52,7 @@ import org.assertj.core.util.VisibleForTesting;
  * <p>
  * These assertions are filesystem independent. You may use them on {@code Path} instances issued from the default
  * filesystem (ie, instances you get when using {@link java.nio.file.Paths#get(String, String...)}) or from other
- * filesystems. For more information, see the {@link FileSystem javadoc for {@code FileSystem} .
+ * filesystems. For more information, see the javadoc for {@link FileSystem}.
  * </p>
  *
  * <p>
@@ -69,16 +71,18 @@ import org.assertj.core.util.VisibleForTesting;
  * accessing the filesystem, these assertions will throw a {@link PathsException}.</li>
  * </ul>
  *
- * @param <S> self type
+ * @param <SELF> self type
  *
  * @see Path
  * @see java.nio.file.Paths#get(String, String...)
  * @see FileSystem
  * @see FileSystem#getPath(String, String...)
- * @see FileSystems#getDefault()
+ * @see java.nio.file.FileSystems#getDefault()
  * @see Files
+ *
+ * @author Valeriy Vyrva
  */
-public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extends AbstractComparableAssert<S, Path> {
+public abstract class AbstractPathAssert<SELF extends AbstractPathAssert<SELF>> extends AbstractComparableAssert<SELF, Path> {
 
   @VisibleForTesting
   protected Paths paths = Paths.instance();
@@ -86,26 +90,32 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
   @VisibleForTesting
   Charset charset = Charset.defaultCharset();
 
-  protected AbstractPathAssert(final Path actual, final Class<?> selfType) {
-	super(actual, selfType);
+  public AbstractPathAssert(final Path actual, final Class<?> selfType) {
+    super(actual, selfType);
   }
 
   /**
    * Verifies that the content of the actual {@code Path} is the same as the given one (both paths must be a readable
-   * files). The default charset is used to read each files.
-   * 
+   * files).
+   * The charset to use when reading the actual path can be provided with {@link #usingCharset(Charset)} or
+   * {@link #usingCharset(String)} prior to calling this method; if not, the platform's default charset (as returned by
+   * {@link Charset#defaultCharset()}) will be used.
+   *
    * Examples:
    * <pre><code class="java"> // use the default charset
    * Path xFile = Files.write(Paths.get("xfile.txt"), "The Truth Is Out There".getBytes());
+   * Path xFileUTF8 = Files.write(Paths.get("xfile-clone.txt"), "The Truth Is Out There".getBytes("UTF-8"));
    * Path xFileClone = Files.write(Paths.get("xfile-clone.txt"), "The Truth Is Out There".getBytes());
    * Path xFileFrench = Files.write(Paths.get("xfile-french.txt"), "La Vérité Est Ailleurs".getBytes());
-   * 
+   *
    * // The following assertion succeeds (default charset is used):
    * assertThat(xFile).hasSameContentAs(xFileClone);
-   * 
+   * // The following assertion succeeds (UTF-8 charset is used to read xFile):
+   * assertThat(xFileUTF8).usingCharset("UTF-8").hasContent(xFileClone);
+   *
    * // The following assertion fails:
    * assertThat(xFile).hasSameContentAs(xFileFrench);</code></pre>
-   * 
+   *
    * @param expected the given {@code Path} to compare the actual {@code Path} to.
    * @return {@code this} assertion object.
    * @throws NullPointerException if the given {@code Path} is {@code null}.
@@ -114,9 +124,40 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * @throws AssertionError if the content of the actual {@code Path} is not equal to the content of the given one.
    * @throws PathsException if an I/O error occurs.
    */
-  public S hasSameContentAs(Path expected) {
-	paths.assertHasSameContentAs(info, actual, expected);
-	return myself;
+  public SELF hasSameContentAs(Path expected) {
+    paths.assertHasSameContentAs(info, actual, charset, expected, Charset.defaultCharset());
+    return myself;
+  }
+
+  /**
+   * Verifies that the content of the actual {@code Path} is the same as the expected one, the expected {@code Path} being read with the given charset while
+   * the charset used to read the actual path can be provided with {@link #usingCharset(Charset)} or
+   * {@link #usingCharset(String)} prior to calling this method; if not, the platform's default charset (as returned by
+   * {@link Charset#defaultCharset()}) will be used.
+   *
+   * Examples:
+   * <pre><code class="java"> Path fileUTF8Charset = Files.write(Paths.get("actual"), Collections.singleton("Gerçek"), StandardCharsets.UTF_8);
+   * Charset turkishCharset = Charset.forName("windows-1254");
+   * Path fileTurkischCharset = Files.write(Paths.get("expected"), Collections.singleton("Gerçek"), turkishCharset);
+   *
+   * // The following assertion succeeds:
+   * assertThat(fileUTF8Charset).usingCharset(StandardCharsets.UTF_8).hasSameContentAs(fileTurkischCharset, turkishCharset);
+   *
+   * // The following assertion fails:
+   * assertThat(fileUTF8Charset).usingCharset(StandardCharsets.UTF_8).hasSameContentAs(fileTurkischCharset, StandardCharsets.UTF_8);</code></pre>
+   *
+   * @param expected the given {@code Path} to compare the actual {@code Path} to.
+   * @param expectedCharset the {@link Charset} used to read the content of the expected Path.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given {@code Path} is {@code null}.
+   * @throws AssertionError if the actual or given {@code Path} is not an existing readable file.
+   * @throws AssertionError if the actual {@code Path} is {@code null}.
+   * @throws AssertionError if the content of the actual {@code Path} is not equal to the content of the given one.
+   * @throws PathsException if an I/O error occurs.
+   */
+  public SELF hasSameContentAs(Path expected, Charset expectedCharset) {
+    paths.assertHasSameContentAs(info, actual, charset, expected, expectedCharset);
+    return myself;
   }
 
   /**
@@ -127,110 +168,111 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * Path xFile = Files.write(Paths.get("xfile.txt"), "The Truth Is Out There".getBytes());
    * assertThat(xFile).hasBinaryContent("The Truth Is Out There".getBytes());
    *
-   * // using a specific charset 
+   * // using a specific charset
    * Charset turkishCharset = Charset.forName("windows-1254");
    * Path xFileTurkish = Files.write(Paths.get("xfile.turk"), Collections.singleton("Gerçek Başka bir yerde mi"), turkishCharset);
-   * 
+   *
    * // The following assertion succeeds:
    * String expectedContent = "Gerçek Başka bir yerde mi" + org.assertj.core.util.Compatibility.System.lineSeparator();
    * byte[] binaryContent = expectedContent.getBytes(turkishCharset.name());
    * assertThat(xFileTurkish).hasBinaryContent(binaryContent);
-   * 
+   *
    * // The following assertion fails ... unless you are in Turkey ;-):
    * assertThat(xFileTurkish).hasBinaryContent("Gerçek Başka bir yerde mi".getBytes());</code></pre>
-   * 
+   *
    * @param expected the expected binary content to compare the actual {@code File}'s content to.
    * @return {@code this} assertion object.
    * @throws NullPointerException if the given content is {@code null}.
    * @throws AssertionError if the actual {@code File} is {@code null}.
    * @throws AssertionError if the actual {@code File} is not an existing file.
-   * @throws RuntimeIOException if an I/O error occurs.
+   * @throws UncheckedIOException if an I/O error occurs.
    * @throws AssertionError if the content of the actual {@code File} is not equal to the given binary content.
    */
-  public S hasBinaryContent(byte[] expected) {
-	paths.assertHasBinaryContent(info, actual, expected);
-	return myself;
+  public SELF hasBinaryContent(byte[] expected) {
+    paths.assertHasBinaryContent(info, actual, expected);
+    return myself;
   }
 
   /**
    * Specifies the name of the charset to use for text-based assertions on the path's contents (path must be a readable
    * file).
-   * 
+   *
    * Examples:
    * <pre><code class="java"> Charset turkishCharset = Charset.forName("windows-1254");
    * Path xFileTurkish = Files.write(Paths.get("xfile.turk"), Collections.singleton("Gerçek Başka bir yerde mi"), turkishCharset);
-   * 
+   *
    * // The following assertion succeeds:
    * assertThat(xFileTurkish).usingCharset("windows-1254").hasContent("Gerçek Başka bir yerde mi");</code></pre>
-   * 
+   *
    * @param charsetName the name of the charset to use.
    * @return {@code this} assertion object.
    * @throws IllegalArgumentException if the given encoding is not supported on this platform.
    */
-  public S usingCharset(String charsetName) {
-	if (!Charset.isSupported(charsetName))
-	  throw new IllegalArgumentException(format("Charset:<'%s'> is not supported on this system", charsetName));
-	return usingCharset(Charset.forName(charsetName));
+  @CheckReturnValue
+  public SELF usingCharset(String charsetName) {
+    checkArgument(Charset.isSupported(charsetName), "Charset:<'%s'> is not supported on this system", charsetName);
+    return usingCharset(Charset.forName(charsetName));
   }
 
   /**
    * Specifies the charset to use for text-based assertions on the path's contents (path must be a readable file).
-   * 
+   *
    * Examples:
    * <pre><code class="java"> Charset turkishCharset = Charset.forName("windows-1254");
    * Path xFileTurkish = Files.write(Paths.get("xfile.turk"), Collections.singleton("Gerçek Başka bir yerde mi"), turkishCharset);
-   * 
+   *
    * // The following assertion succeeds:
    * assertThat(xFileTurkish).usingCharset(turkishCharset).hasContent("Gerçek Başka bir yerde mi");</code></pre>
-   * 
+   *
    * @param charset the charset to use.
    * @return {@code this} assertion object.
    * @throws NullPointerException if the given charset is {@code null}.
    */
-  public S usingCharset(Charset charset) {
-	this.charset = checkNotNull(charset, "The charset should not be null");
-	return myself;
+  @CheckReturnValue
+  public SELF usingCharset(Charset charset) {
+    this.charset = checkNotNull(charset, "The charset should not be null");
+    return myself;
   }
 
   /**
    * Verifies that the text content of the actual {@code Path} (which must be a readable file) is <b>exactly</b> equal
-   * to the given one.<br/>
-   * The charset to use when reading the file should be provided with {@link #usingCharset(Charset)} or
+   * to the given one.<br>
+   * The charset to use when reading the actual path should be provided with {@link #usingCharset(Charset)} or
    * {@link #usingCharset(String)} prior to calling this method; if not, the platform's default charset (as returned by
    * {@link Charset#defaultCharset()}) will be used.
-   * 
+   *
    * Examples:
    * <pre><code class="java"> // use the default charset
    * Path xFile = Files.write(Paths.get("xfile.txt"), "The Truth Is Out There".getBytes());
-   * 
+   *
    * // The following assertion succeeds (default charset is used):
    * assertThat(xFile).hasContent("The Truth Is Out There");
-   * 
+   *
    * // The following assertion fails:
    * assertThat(xFile).hasContent("La Vérité Est Ailleurs");
-   * 
-   * // using a specific charset 
+   *
+   * // using a specific charset
    * Charset turkishCharset = Charset.forName("windows-1254");
-   * 
+   *
    * Path xFileTurkish = Files.write(Paths.get("xfile.turk"), Collections.singleton("Gerçek Başka bir yerde mi"), turkishCharset);
-   * 
+   *
    * // The following assertion succeeds:
    * assertThat(xFileTurkish).usingCharset(turkishCharset).hasContent("Gerçek Başka bir yerde mi");
-   * 
+   *
    * // The following assertion fails ... unless you are in Turkey ;-):
    * assertThat(xFileTurkish).hasContent("Gerçek Başka bir yerde mi");</code></pre>
    *
    * @param expected the expected text content to compare the actual {@code File}'s content to.
    * @return {@code this} assertion object.
    * @throws NullPointerException if the given content is {@code null}.
-   * @throws RuntimeIOException if an I/O error occurs.
+   * @throws UncheckedIOException if an I/O error occurs.
    * @throws AssertionError if the actual {@code Path} is {@code null}.
    * @throws AssertionError if the actual {@code Path} is not a {@link Files#isReadable(Path) readable} file.
    * @throws AssertionError if the content of the actual {@code File} is not equal to the given content.
    */
-  public S hasContent(String expected) {
-	paths.assertHasContent(info, actual, expected, charset);
-	return myself;
+  public SELF hasContent(String expected) {
+    paths.assertHasContent(info, actual, expected, charset);
+    return myself;
   }
 
   /**
@@ -242,15 +284,15 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * Path readableFile = Paths.get("readableFile");
    * Set&lt;PosixFilePermission&gt; perms = PosixFilePermissions.fromString("r--r--r--");
    * Files.createFile(readableFile, PosixFilePermissions.asFileAttribute(perms));
-   * 
+   *
    * final Path symlinkToReadableFile = FileSystems.getDefault().getPath("symlinkToReadableFile");
    * Files.createSymbolicLink(symlinkToReadableFile, readableFile);
-   * 
+   *
    * // Create a file and set permissions not to be readable.
    * Path nonReadableFile = Paths.get("nonReadableFile");
    * Set&lt;PosixFilePermission&gt; notReadablePerms = PosixFilePermissions.fromString("-wx------");
    * Files.createFile(nonReadableFile, PosixFilePermissions.asFileAttribute(notReadablePerms));
-   * 
+   *
    * final Path nonExistentPath = FileSystems.getDefault().getPath("nonexistent");
    *
    * // The following assertions succeed:
@@ -265,9 +307,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @see Files#isReadable(Path)
    */
-  public S isReadable() {
-	paths.assertIsReadable(info, actual);
-	return myself;
+  public SELF isReadable() {
+    paths.assertIsReadable(info, actual);
+    return myself;
   }
 
   /**
@@ -279,15 +321,15 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * Path writableFile = Paths.get("writableFile");
    * Set&lt;PosixFilePermission&gt; perms = PosixFilePermissions.fromString("rw-rw-rw-");
    * Files.createFile(writableFile, PosixFilePermissions.asFileAttribute(perms));
-   * 
+   *
    * final Path symlinkToWritableFile = FileSystems.getDefault().getPath("symlinkToWritableFile");
    * Files.createSymbolicLink(symlinkToWritableFile, writableFile);
-   * 
+   *
    * // Create a file and set permissions not to be writable.
    * Path nonWritableFile = Paths.get("nonWritableFile");
    * perms = PosixFilePermissions.fromString("r--r--r--");
    * Files.createFile(nonWritableFile, PosixFilePermissions.asFileAttribute(perms));
-   * 
+   *
    * final Path nonExistentPath = FileSystems.getDefault().getPath("nonexistent");
    *
    * // The following assertions succeed:
@@ -302,13 +344,13 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @see Files#isWritable(Path)
    */
-  public S isWritable() {
-	paths.assertIsWritable(info, actual);
-	return myself;
+  public SELF isWritable() {
+    paths.assertIsWritable(info, actual);
+    return myself;
   }
 
   /**
-   * Assert that the tested {@link Path} is a executable file, it checks that the file exists (according to
+   * Assert that the tested {@link Path} is an executable file, it checks that the file exists (according to
    * {@link Files#exists(Path, LinkOption...)}) and that it is executable(according to {@link Files#isExecutable(Path)}
    * ).
    *
@@ -317,15 +359,15 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * Path executableFile = Paths.get("executableFile");
    * Set&lt;PosixFilePermission&gt; perms = PosixFilePermissions.fromString("r-xr-xr-x");
    * Files.createFile(executableFile, PosixFilePermissions.asFileAttribute(perms));
-   * 
+   *
    * final Path symlinkToExecutableFile = FileSystems.getDefault().getPath("symlinkToExecutableFile");
    * Files.createSymbolicLink(symlinkToExecutableFile, executableFile);
-   * 
+   *
    * // Create a file and set permissions not to be executable.
    * Path nonExecutableFile = Paths.get("nonExecutableFile");
    * perms = PosixFilePermissions.fromString("rw-------");
    * Files.createFile(nonExecutableFile, PosixFilePermissions.asFileAttribute(perms));
-   * 
+   *
    * final Path nonExistentPath = FileSystems.getDefault().getPath("nonexistent");
    *
    * // The following assertions succeed:
@@ -340,9 +382,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @see Files#isExecutable(Path)
    */
-  public S isExecutable() {
-	paths.assertIsExecutable(info, actual);
-	return myself;
+  public SELF isExecutable() {
+    paths.assertIsExecutable(info, actual);
+    return myself;
   }
 
   /**
@@ -384,9 +426,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @see Files#exists(Path, LinkOption...)
    */
-  public S exists() {
-	paths.assertExists(info, actual);
-	return myself;
+  public SELF exists() {
+    paths.assertExists(info, actual);
+    return myself;
   }
 
   /**
@@ -405,7 +447,7 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * Files.createFile(existingFile);
    * final Path symlinkToExistingFile = fs.getPath("symlink");
    * Files.createSymbolicLink(symlinkToExistingFile, existingFile);
-   * 
+   *
    * // Create a symbolic link whose target does not exist
    * final Path nonExistentPath = fs.getPath("nonexistent");
    * final Path symlinkToNonExistentPath = fs.getPath("symlinkToNonExistentPath");
@@ -423,9 +465,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @see Files#exists(Path, LinkOption...)
    */
-  public S existsNoFollowLinks() {
-	paths.assertExistsNoFollowLinks(info, actual);
-	return myself;
+  public SELF existsNoFollowLinks() {
+    paths.assertExistsNoFollowLinks(info, actual);
+    return myself;
   }
 
   /**
@@ -450,7 +492,7 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * Files.createFile(existingFile);
    * final Path symlinkToExistingFile = fs.getPath("symlink");
    * Files.createSymbolicLink(symlinkToExistingFile, existingFile);
-   * 
+   *
    * // Create a symbolic link to a nonexistent target file.
    * final Path nonExistentPath = fs.getPath("nonExistentPath");
    * final Path symlinkToNonExistentPath = fs.getPath("symlinkToNonExistentPath");
@@ -458,7 +500,7 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * // The following assertion succeeds
    * assertThat(nonExistentPath).doesNotExist();
-   * 
+   *
    * // The following assertions fail:
    * assertThat(existingFile).doesNotExist();
    * assertThat(symlinkToExistingFile).doesNotExist();
@@ -470,9 +512,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * @see Files#notExists(Path, LinkOption...)
    * @see LinkOption#NOFOLLOW_LINKS
    */
-  public S doesNotExist() {
-	paths.assertDoesNotExist(info, actual);
-	return myself;
+  public SELF doesNotExist() {
+    paths.assertDoesNotExist(info, actual);
+    return myself;
   }
 
   /**
@@ -522,9 +564,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @return self
    */
-  public S isRegularFile() {
-	paths.assertIsRegularFile(info, actual);
-	return myself;
+  public SELF isRegularFile() {
+    paths.assertIsRegularFile(info, actual);
+    return myself;
   }
 
   /**
@@ -573,9 +615,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @return self
    */
-  public S isDirectory() {
-	paths.assertIsDirectory(info, actual);
-	return myself;
+  public SELF isDirectory() {
+    paths.assertIsDirectory(info, actual);
+    return myself;
   }
 
   /**
@@ -619,9 +661,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @return self
    */
-  public S isSymbolicLink() {
-	paths.assertIsSymbolicLink(info, actual);
-	return myself;
+  public SELF isSymbolicLink() {
+    paths.assertIsSymbolicLink(info, actual);
+    return myself;
   }
 
   /**
@@ -655,9 +697,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @see Path#isAbsolute()
    */
-  public S isAbsolute() {
-	paths.assertIsAbsolute(info, actual);
-	return myself;
+  public SELF isAbsolute() {
+    paths.assertIsAbsolute(info, actual);
+    return myself;
   }
 
   /**
@@ -687,9 +729,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @see Path#isAbsolute()
    */
-  public S isRelative() {
-	paths.assertIsRelative(info, actual);
-	return myself;
+  public SELF isRelative() {
+    paths.assertIsRelative(info, actual);
+    return myself;
   }
 
   /**
@@ -716,9 +758,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @return self
    */
-  public S isNormalized() {
-	paths.assertIsNormalized(info, actual);
-	return myself;
+  public SELF isNormalized() {
+    paths.assertIsNormalized(info, actual);
+    return myself;
   }
 
   /**
@@ -736,11 +778,11 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * // Create a directory
    * final Path basedir = fs.getPath("/tmp/foo");
    * Files.createDirectories(basedir);
-   * 
+   *
    * // Create a file in this directory
    * final Path existingFile = basedir.resolve("existingFile");
    * Files.createFile(existingFile);
-   * 
+   *
    * // Create a symbolic link to that file
    * final Path symlinkToExistingFile = basedir.resolve("symlinkToExistingFile");
    * Files.createSymbolicLink(symlinkToExistingFile, existingFile);
@@ -751,14 +793,15 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * // The following assertion fails:
    * assertThat(symlinkToExistingFile).isCanonical();</code></pre>
    *
+   * @return self
    * @throws PathsException an I/O error occurred while evaluating the path
    *
    * @see Path#toRealPath(LinkOption...)
    * @see Files#isSameFile(Path, Path)
    */
-  public S isCanonical() {
-	paths.assertIsCanonical(info, actual);
-	return myself;
+  public SELF isCanonical() {
+    paths.assertIsCanonical(info, actual);
+    return myself;
   }
 
   /**
@@ -783,7 +826,7 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * // the following assertions fail:
    * assertThat(fs.getPath("/dir1/file.txt").hasFileName("other.txt");
-   * // fail because, last element is "." 
+   * // fail because, last element is "."
    * assertThat(fs.getPath("/dir1/.")).hasFileName("dir1");
    * // fail because a link filename is not the same as its target filename
    * assertThat(symlink).hasFileName("file.txt");</code></pre>
@@ -794,9 +837,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * @throws NullPointerException if the given fileName is null.
    * @see Path#getFileName()
    */
-  public S hasFileName(final String fileName) {
-	paths.assertHasFileName(info, actual, fileName);
-	return myself;
+  public SELF hasFileName(final String fileName) {
+    paths.assertHasFileName(info, actual, fileName);
+    return myself;
   }
 
   /**
@@ -829,19 +872,19 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @throws NullPointerException if the given parent path is null.
    * @throws PathsException failed to canonicalize the tested path or the path given as an argument
-   * 
+   *
    * @see Path#getParent()
    */
-  public S hasParent(final Path expected) {
-	paths.assertHasParent(info, actual, expected);
-	return myself;
+  public SELF hasParent(final Path expected) {
+    paths.assertHasParent(info, actual, expected);
+    return myself;
   }
 
   /**
    * Assert that the tested {@link Path} has the expected parent path.
    *
    * <p>
-   * <em>This assertion will not perform any canonicalization of either the tested path or the path given as an argument; 
+   * <em>This assertion will not perform any canonicalization of either the tested path or the path given as an argument;
    * see class description for more details. If this is not what you want, use {@link #hasParent(Path)} instead.</em>
    * </p>
    *
@@ -878,12 +921,12 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * @return self
    *
    * @throws NullPointerException if the given parent path is null.
-   * 
+   *
    * @see Path#getParent()
    */
-  public S hasParentRaw(final Path expected) {
-	paths.assertHasParentRaw(info, actual, expected);
-	return myself;
+  public SELF hasParentRaw(final Path expected) {
+    paths.assertHasParentRaw(info, actual, expected);
+    return myself;
   }
 
   /**
@@ -916,16 +959,16 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @see Path#getParent()
    */
-  public S hasNoParent() {
-	paths.assertHasNoParent(info, actual);
-	return myself;
+  public SELF hasNoParent() {
+    paths.assertHasNoParent(info, actual);
+    return myself;
   }
 
   /**
    * Assert that the tested {@link Path} has no parent.
    *
    * <p>
-   * <em>This assertion will not canonicalize the tested path before performing the test; 
+   * <em>This assertion will not canonicalize the tested path before performing the test;
    * if this is not what you want, use {@link #hasNoParent()} instead.</em>
    * </p>
    *
@@ -956,16 +999,16 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @see Path#getParent()
    */
-  public S hasNoParentRaw() {
-	paths.assertHasNoParentRaw(info, actual);
-	return myself;
+  public SELF hasNoParentRaw() {
+    paths.assertHasNoParentRaw(info, actual);
+    return myself;
   }
 
   /**
    * Assert that the tested {@link Path} starts with the given path.
    *
    * <p>
-   * <em>This assertion will perform canonicalization of both the tested path and the path given as an argument; 
+   * <em>This assertion will perform canonicalization of both the tested path and the path given as an argument;
    * see class description for more details. If this is not what you want, use {@link #startsWithRaw(Path)} instead.</em>
    * </p>
    *
@@ -998,9 +1041,9 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * @see Path#startsWith(Path)
    * @see Path#toRealPath(LinkOption...)
    */
-  public S startsWith(final Path other) {
-	paths.assertStartsWith(info, actual, other);
-	return myself;
+  public SELF startsWith(final Path other) {
+    paths.assertStartsWith(info, actual, other);
+    return myself;
   }
 
   /**
@@ -1041,12 +1084,12 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * @return self
    *
    * @throws NullPointerException if the given path is null.
-   * 
+   *
    * @see Path#startsWith(Path)
    */
-  public S startsWithRaw(final Path other) {
-	paths.assertStartsWithRaw(info, actual, other);
-	return myself;
+  public SELF startsWithRaw(final Path other) {
+    paths.assertStartsWithRaw(info, actual, other);
+    return myself;
   }
 
   /**
@@ -1082,13 +1125,13 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    * @throws NullPointerException if the given path is null.
    * @throws PathsException failed to canonicalize the tested path (see class
    *           description)
-   * 
+   *
    * @see Path#endsWith(Path)
    * @see Path#toRealPath(LinkOption...)
    */
-  public S endsWith(final Path other) {
-	paths.assertEndsWith(info, actual, other);
-	return myself;
+  public SELF endsWith(final Path other) {
+    paths.assertEndsWith(info, actual, other);
+    return myself;
   }
 
   /**
@@ -1122,13 +1165,397 @@ public abstract class AbstractPathAssert<S extends AbstractPathAssert<S>> extend
    *
    * @param other the other path
    * @return self
-   * 
+   *
    * @throws NullPointerException if the given path is null.
-   * 
+   *
    * @see Path#endsWith(Path)
    */
-  public S endsWithRaw(final Path other) {
-	paths.assertEndsWithRaw(info, actual, other);
-	return myself;
+  public SELF endsWithRaw(final Path other) {
+    paths.assertEndsWithRaw(info, actual, other);
+    return myself;
+  }
+
+  /**
+   * Verifies that the tested {@link Path} digest (calculated with the specified {@link MessageDigest}) is equal to the given one.
+   * <p>
+   * Note that the {@link Path} must be readable.
+   * <p>
+   * Examples:
+   * <pre><code class="java"> // fs is a filesystem
+   * // assume that the current directory contains https://repo1.maven.org/maven2/org/assertj/assertj-core/2.9.0/assertj-core-2.9.0.jar.
+   * Path tested = Paths.get("assertj-core-2.9.0.jar");
+   *
+   * // The following assertions succeed:
+   * assertThat(tested).hasDigest(MessageDigest.getInstance("SHA1"), new byte[]{92, 90, -28, 91, 88, -15, 32, 35, -127, 122, -66, 73, 36, 71, -51, -57, -111, 44, 26, 44});
+   * assertThat(tested).hasDigest(MessageDigest.getInstance("MD5"), new byte[]{-36, -77, 1, 92, -46, -124, 71, 100, 76, -127, 10, -13, 82, -125, 44, 25});
+   *
+   * // The following assertions fail:
+   * assertThat(tested).hasDigest(MessageDigest.getInstance("SHA1"), "93b9ced2ee5b3f0f4c8e640e77470dab031d4cad".getBytes());
+   * assertThat(tested).hasDigest(MessageDigest.getInstance("MD5"), "3735dff8e1f9df0492a34ef075205b8f".getBytes()); </code></pre>
+   *
+   * @param digest the MessageDigest used to calculate the digests.
+   * @param expected the expected binary content to compare the actual {@code Path}'s content to.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given algorithm is {@code null}.
+   * @throws NullPointerException if the given digest is {@code null}.
+   * @throws AssertionError       if the actual {@code Path} is {@code null}.
+   * @throws AssertionError       if the actual {@code Path} does not exist.
+   * @throws AssertionError       if the actual {@code Path} is not an file.
+   * @throws AssertionError       if the actual {@code Path} is not readable.
+   * @throws UncheckedIOException if any I/O error occurs.
+   * @throws AssertionError       if the content of the tested {@code Path}'s digest is not equal to the given one.
+   * @since 3.11.0
+   */
+  public SELF hasDigest(MessageDigest digest, byte[] expected) {
+    paths.assertHasDigest(info, actual, digest, expected);
+    return myself;
+  }
+
+  /**
+   * Verifies that the tested {@link Path} digest (calculated with the specified {@link MessageDigest}) is equal to the given one.
+   * <p>
+   * Note that the {@link Path} must be readable.
+   * <p>
+   * Examples:
+   * <pre><code class="java"> // fs is a filesystem
+   * // assume that the current directory contains https://repo1.maven.org/maven2/org/assertj/assertj-core/2.9.0/assertj-core-2.9.0.jar.
+   * Path tested = Paths.get("assertj-core-2.9.0.jar");
+   *
+   * // The following assertions succeed:
+   * assertThat(tested).hasDigest(MessageDigest.getInstance("SHA1"), "5c5ae45b58f12023817abe492447cdc7912c1a2c");
+   * assertThat(tested).hasDigest(MessageDigest.getInstance("MD5"), "dcb3015cd28447644c810af352832c19");
+   *
+   * // The following assertions fail:
+   * assertThat(tested).hasDigest(MessageDigest.getInstance("SHA1"), "93b9ced2ee5b3f0f4c8e640e77470dab031d4cad");
+   * assertThat(tested).hasDigest(MessageDigest.getInstance("MD5"), "3735dff8e1f9df0492a34ef075205b8f"); </code></pre>
+   *
+   * @param digest the MessageDigest used to calculate the digests.
+   * @param expected the expected binary content to compare the actual {@code Path}'s content to.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given algorithm is {@code null}.
+   * @throws NullPointerException if the given digest is {@code null}.
+   * @throws AssertionError       if the actual {@code Path} is {@code null}.
+   * @throws AssertionError       if the actual {@code Path} does not exist.
+   * @throws AssertionError       if the actual {@code Path} is not an file.
+   * @throws AssertionError       if the actual {@code Path} is not readable.
+   * @throws UncheckedIOException if any I/O error occurs.
+   * @throws AssertionError       if the content of the tested {@code Path}'s digest is not equal to the given one.
+   * @since 3.11.0
+   */
+  public SELF hasDigest(MessageDigest digest, String expected) {
+    paths.assertHasDigest(info, actual, digest, expected);
+    return myself;
+  }
+
+  /**
+   * Verifies that the tested {@link Path} digest (calculated with the specified algorithm) is equal to the given one.
+   * <p>
+   * Note that the {@link Path} must be readable.
+   * <p>
+   * Examples:
+   * <pre><code class="java"> // fs is a filesystem
+   * // assume that the current directory contains https://repo1.maven.org/maven2/org/assertj/assertj-core/2.9.0/assertj-core-2.9.0.jar.
+   * Path tested = Paths.get("assertj-core-2.9.0.jar");
+   *
+   * // The following assertions succeed:
+   * assertThat(tested).hasDigest("SHA1", new byte[]{92, 90, -28, 91, 88, -15, 32, 35, -127, 122, -66, 73, 36, 71, -51, -57, -111, 44, 26, 44});
+   * assertThat(tested).hasDigest("MD5", new byte[]{-36, -77, 1, 92, -46, -124, 71, 100, 76, -127, 10, -13, 82, -125, 44, 25});
+   *
+   * // The following assertions fail:
+   * assertThat(tested).hasDigest("SHA1", "93b9ced2ee5b3f0f4c8e640e77470dab031d4cad".getBytes());
+   * assertThat(tested).hasDigest("MD5", "3735dff8e1f9df0492a34ef075205b8f".getBytes()); </code></pre>
+   *
+   * @param algorithm the algorithm used to calculate the digests to compare.
+   * @param expected the expected binary content to compare the actual {@code Path}'s content to.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given algorithm is {@code null}.
+   * @throws NullPointerException if the given digest is {@code null}.
+   * @throws AssertionError       if the actual {@code Path} is {@code null}.
+   * @throws AssertionError       if the actual {@code Path} does not exist.
+   * @throws AssertionError       if the actual {@code Path} is not an file.
+   * @throws AssertionError       if the actual {@code Path} is not readable.
+   * @throws UncheckedIOException if any I/O error occurs.
+   * @throws AssertionError       if the content of the tested {@code Path}'s digest is not equal to the given one.
+   * @since 3.11.0
+   */
+  public SELF hasDigest(String algorithm, byte[] expected) {
+    paths.assertHasDigest(info, actual, algorithm, expected);
+    return myself;
+  }
+
+  /**
+   * Verifies that the tested {@link Path} digest (calculated with the specified algorithm) is equal to the given one.
+   * <p>
+   * Note that the {@link Path} must be readable.
+   * <p>
+   * Examples:
+   * <pre><code class="java"> // assume that assertj-core-2.9.0.jar was downloaded from https://repo1.maven.org/maven2/org/assertj/assertj-core/2.9.0/assertj-core-2.9.0.jar
+   * Path tested = Paths.get("assertj-core-2.9.0.jar");
+   *
+   * // The following assertions succeed:
+   * assertThat(tested).hasDigest("SHA1", "5c5ae45b58f12023817abe492447cdc7912c1a2c");
+   * assertThat(tested).hasDigest("MD5", "dcb3015cd28447644c810af352832c19");
+   *
+   * // The following assertions fail:
+   * assertThat(tested).hasDigest("SHA1", "93b9ced2ee5b3f0f4c8e640e77470dab031d4cad");
+   * assertThat(tested).hasDigest("MD5", "3735dff8e1f9df0492a34ef075205b8f"); </code></pre>
+   *
+   * @param algorithm the algorithm used to calculate the digests.
+   * @param expected the expected digest to compare the actual {@code Path}'s digest to.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given algorithm is {@code null}.
+   * @throws NullPointerException if the given digest is {@code null}.
+   * @throws AssertionError       if the actual {@code Path} is {@code null}.
+   * @throws AssertionError       if the actual {@code Path} does not exist.
+   * @throws AssertionError       if the actual {@code Path} is not an file.
+   * @throws AssertionError       if the actual {@code Path} is not readable.
+   * @throws UncheckedIOException if any I/O error occurs.
+   * @throws AssertionError       if the content of the tested {@code Path}'s digest is not equal to the given one.
+   * @since 3.11.0
+   */
+  public SELF hasDigest(String algorithm, String expected) {
+    paths.assertHasDigest(info, actual, algorithm, expected);
+    return myself;
+  }
+
+  /**
+   * Verify that the actual {@code Path} is a directory containing at least one file matching the given {@code Predicate<Path>}.
+   * <p>
+   * Note that the actual {@link Path} must exist and be a directory.
+   * <p>
+   * Given the following directory structure:
+   * <pre><code class="text"> /root/
+   * /root/sub-dir-1/
+   * /root/sub-dir-1/file-1.ext
+   * /root/sub-dir-1/file-2.ext
+   * /root/sub-file-1.ext
+   * /root/sub-file-2.ext</code></pre>
+   *
+   * Here are some assertions examples:
+   * <pre><code class="java"> Path root = Paths.get("root");
+   *
+   * // The following assertions succeed:
+   * assertThat(root).isDirectoryContaining(path -&gt; path.getFileName().toString().startsWith("sub-dir"))
+   *                 .isDirectoryContaining(path -&gt; path.getFileName().toString().startsWith("sub-file"))
+   *                 .isDirectoryContaining(path -&gt; path.getFileName().toString().endsWith(".ext"))
+   *                 .isDirectoryContaining(Files::isDirectory);
+   *
+   * // The following assertions fail:
+   * assertThat(root).isDirectoryContaining(file -&gt; file.getFileName().toString().startsWith("dir"));
+   * assertThat(root).isDirectoryContaining(file -&gt; file.getFileName().toString().endsWith(".bin")); </code></pre>
+   *
+   * @param filter the filter for files located inside {@code actual}'s directory.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given filter is {@code null}.
+   * @throws AssertionError       if actual is {@code null}.
+   * @throws AssertionError       if actual does not exist.
+   * @throws AssertionError       if actual is not a directory.
+   * @throws AssertionError       if actual does not contain any files matching the given predicate.
+   * @since 3.13.0
+   */
+  public SELF isDirectoryContaining(Predicate<Path> filter) {
+    paths.assertIsDirectoryContaining(info, actual, filter);
+    return myself;
+  }
+
+  /**
+   * Verify that the actual {@code Path} is a directory containing at least one file matching the given {@code String}
+   * interpreted as a path matcher (as per {@link FileSystem#getPathMatcher(String)}).
+   * <p>
+   * Note that the actual {@link Path} must exist and be a directory.
+   * <p>
+   * Given the following directory structure:
+   * <pre><code class="text"> /root/
+   * /root/sub-dir-1/
+   * /root/sub-dir-1/file-1.ext
+   * /root/sub-dir-1/file-2.ext
+   * /root/sub-file-1.ext
+   * /root/sub-file-2.ext</code></pre>
+   *
+   * Here are some assertions examples:
+   * <pre><code class="java"> Path root = Paths.get("root");
+   *
+   * // The following assertions succeed:
+   * assertThat(root).isDirectoryContaining("glob:**sub-dir*")
+   *                 .isDirectoryContaining("glob:**sub-file*")
+   *                 .isDirectoryContaining("glob:**.ext")
+   *                 .isDirectoryContaining("regex:.*ext")
+   *                 .isDirectoryContaining("glob:**.{ext,bin");
+   *
+   * // The following assertions fail:
+   * assertThat(root).isDirectoryContaining("glob:**dir");
+   * assertThat(root).isDirectoryContaining("glob:**.bin");
+   * assertThat(root).isDirectoryContaining("glob:**.{java,class}"); </code></pre>
+   *
+   * @param syntaxAndPattern the syntax and pattern for {@link java.nio.file.PathMatcher} as described in {@link FileSystem#getPathMatcher(String)}.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given syntaxAndPattern is {@code null}.
+   * @throws AssertionError       if actual is {@code null}.
+   * @throws AssertionError       if actual does not exist.
+   * @throws AssertionError       if actual is not a directory.
+   * @throws AssertionError       if actual does not contain any files matching the given path matcher.
+   * @see FileSystem#getPathMatcher(String)
+   * @since 3.13.0
+   */
+  public SELF isDirectoryContaining(String syntaxAndPattern) {
+    paths.assertIsDirectoryContaining(info, actual, syntaxAndPattern);
+    return myself;
+  }
+
+  /**
+   * Verify that the actual {@code Path} is a directory that does not contain any files matching the given {@code Predicate<Path>}.
+   * <p>
+   * Note that the actual {@link Path} must exist and be a directory.
+   * <p>
+   * Given the following directory structure:
+   * <pre><code class="text"> /root/
+   * /root/sub-dir-1/
+   * /root/sub-dir-1/file-1.ext
+   * /root/sub-dir-1/file-2.ext
+   * /root/sub-file-1.ext
+   * /root/sub-file-2.ext</code></pre>
+   *
+   * Here are some assertions examples:
+   * <pre><code class="java"> Path root = Paths.get("root");
+   *
+   * // The following assertions succeed:
+   * assertThat(root).isDirectoryNotContaining(file -&gt; file.getFileName().toString().startsWith("dir"))
+   *                 .isDirectoryNotContaining(file -&gt; file.getFileName().toString().endsWith(".bin"));
+   *
+   * // The following assertions fail:
+   * assertThat(root).isDirectoryNotContaining(path -&gt; path.getFileName().toString().startsWith("sub-dir"));
+   * assertThat(root).isDirectoryNotContaining(path -&gt; path.getFileName().toString().startsWith("sub-file"));
+   * assertThat(root).isDirectoryNotContaining(path -&gt; path.getFileName().toString().endsWith(".ext"));
+   * assertThat(root).isDirectoryNotContaining(Files::isDirectory); </code></pre>
+   *
+   * @param filter the filter for files located inside {@code actual}'s directory.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given filter is {@code null}.
+   * @throws AssertionError       if actual is {@code null}.
+   * @throws AssertionError       if actual does not exist.
+   * @throws AssertionError       if actual is not a directory.
+   * @throws AssertionError       if actual contains a file matching the given predicate.
+   * @since 3.13.0
+   */
+  public SELF isDirectoryNotContaining(Predicate<Path> filter) {
+    paths.assertIsDirectoryNotContaining(info, actual, filter);
+    return myself;
+  }
+
+  /**
+   * Verify that the actual {@code Path} is a directory that does not contain any files matching the given {@code String}
+   * interpreted as a path matcher (as per {@link FileSystem#getPathMatcher(String)}).
+   * <p>
+   * Note that the actual {@link Path} must exist and be a directory.
+   * <p>
+   * Given the following directory structure:
+   * <pre><code class="text"> /root/
+   * /root/sub-dir-1/
+   * /root/sub-dir-1/file-1.ext
+   * /root/sub-dir-1/file-2.ext
+   * /root/sub-file-1.ext
+   * /root/sub-file-2.ext</code></pre>
+   *
+   * Here are some assertions examples:
+   * <pre><code class="java"> Path root = Paths.get("root");
+   *
+   * // The following assertions succeed:
+   * assertThat(root).isDirectoryNotContaining("glob:**dir")
+   *                 .isDirectoryNotContaining("glob:**.bin")
+   *                 .isDirectoryNotContaining("regex:.*bin")
+   *                 .isDirectoryNotContaining("glob:**.{java,class}");
+   *
+   * // The following assertions fail:
+   * assertThat(root).isDirectoryNotContaining("glob:**sub-dir*");
+   * assertThat(root).isDirectoryNotContaining("glob:**sub-file*");
+   * assertThat(root).isDirectoryNotContaining("glob:**.ext");
+   * assertThat(root).isDirectoryNotContaining("regex:.*ext");
+   * assertThat(root).isDirectoryNotContaining("glob:**.{ext,bin"); </code></pre>
+   *
+   * @param syntaxAndPattern the syntax and pattern for {@link java.nio.file.PathMatcher} as described in {@link FileSystem#getPathMatcher(String)}.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given syntaxAndPattern is {@code null}.
+   * @throws AssertionError       if actual is {@code null}.
+   * @throws AssertionError       if actual does not exist.
+   * @throws AssertionError       if actual is not a directory.
+   * @throws AssertionError       if actual contains a file matching the given path matcher.
+   * @see FileSystem#getPathMatcher(String)
+   * @since 3.13.0
+   */
+  public SELF isDirectoryNotContaining(String syntaxAndPattern) {
+    paths.assertIsDirectoryNotContaining(info, actual, syntaxAndPattern);
+    return myself;
+  }
+
+  /**
+   * Verify that the actual {@code Path} is an empty directory.
+   * <p>
+   * Note that the actual {@link Path} must exist and be a directory.
+   * <p>
+   * Given the following directory structure:
+   * <pre><code class="text"> /root/
+   * /root/sub-dir-1/
+   * /root/sub-dir-1/file-1.ext
+   * /root/sub-dir-1/file-2.ext
+   * /root/sub-dir-2/
+   * /root/sub-file-1.ext
+   * /root/sub-file-2.ext</code></pre>
+   *
+   * Here are some assertions examples:
+   * <pre><code class="java"> Path root = Paths.get("root");
+   *
+   * // The following assertion succeeds:
+   * assertThat(root.resolve("sub-dir-2")).isEmptyDirectory();
+   *
+   * // The following assertions fail:
+   * assertThat(root).isEmptyDirectory();
+   * assertThat(root.resolve("sub-dir-1")).isEmptyDirectory(); </code></pre>
+   *
+   * @return {@code this} assertion object.
+   * @throws AssertionError if actual is {@code null}.
+   * @throws AssertionError if actual does not exist.
+   * @throws AssertionError if actual is not a directory.
+   * @throws AssertionError if actual is not empty.
+   * @since 3.13.0
+   */
+  public SELF isEmptyDirectory() {
+    paths.assertIsEmptyDirectory(info, actual);
+    return myself;
+  }
+
+  /**
+   * Verify that the actual {@code Path} is a non empty directory.
+   * <p>
+   * Note that the actual {@link Path} must exist and be a directory.
+   * <p>
+   * Given the following directory structure:
+   * <pre><code class="text"> /root/
+   * /root/sub-dir-1/
+   * /root/sub-dir-1/file-1.ext
+   * /root/sub-dir-1/file-2.ext
+   * /root/sub-dir-2/
+   * /root/sub-file-1.ext
+   * /root/sub-file-2.ext</code></pre>
+   *
+   * Here are some assertions examples:
+   * <pre><code class="java"> Path root = Paths.get("root");
+   *
+   * // The following assertions succeed:
+   * assertThat(root).isNotEmptyDirectory();
+   * assertThat(root.resolve("sub-dir-1")).isNotEmptyDirectory();
+   *
+   * // The following assertion fails:
+   * assertThat(root.resolve("sub-dir-2")).isNotEmptyDirectory(); </code></pre>
+   *
+   * @return {@code this} assertion object.
+   * @throws AssertionError if actual is {@code null}.
+   * @throws AssertionError if actual does not exist.
+   * @throws AssertionError if actual is not a directory.
+   * @throws AssertionError if actual is empty.
+   * @since 3.13.0
+   */
+  public SELF isNotEmptyDirectory() {
+    paths.assertIsNotEmptyDirectory(info, actual);
+    return myself;
   }
 }

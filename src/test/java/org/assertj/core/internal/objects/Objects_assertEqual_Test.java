@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,20 +8,24 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.objects;
 
 import static org.assertj.core.error.ShouldBeEqual.shouldBeEqual;
+import static org.assertj.core.presentation.StandardRepresentation.STANDARD_REPRESENTATION;
+import static org.assertj.core.test.AlwaysEqualComparator.ALWAY_EQUALS;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
 import static org.mockito.Mockito.verify;
 
 import org.assertj.core.api.AssertionInfo;
+import org.assertj.core.internal.ComparatorBasedComparisonStrategy;
 import org.assertj.core.internal.Objects;
 import org.assertj.core.internal.ObjectsBaseTest;
-import org.assertj.core.presentation.StandardRepresentation;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 /**
  * Tests for <code>{@link Objects#assertEqual(AssertionInfo, Object, Object)}</code>.
@@ -30,6 +34,8 @@ import org.junit.Test;
  * @author Joel Costigliola
  */
 public class Objects_assertEqual_Test extends ObjectsBaseTest {
+
+  private static final Objects OBJECTS_WITH_ALWAY_EQUALS_COMPARATOR = new Objects(new ComparatorBasedComparisonStrategy(ALWAY_EQUALS));
 
   @Test
   public void should_pass_if_objects_are_equal() {
@@ -53,19 +59,28 @@ public class Objects_assertEqual_Test extends ObjectsBaseTest {
     objectsWithCustomComparisonStrategy.assertEqual(someInfo(), "Yoda", "YODA");
   }
 
+  @ParameterizedTest
+  @CsvSource({
+      "foo, bar",
+      "null, foo",
+      "null, bar",
+      "null, null"
+  })
+  public void should_not_check_actual_or_expected_before_applying_a_custom_comparator(String actual, String expected) {
+    OBJECTS_WITH_ALWAY_EQUALS_COMPARATOR.assertEqual(someInfo(), actual, expected);
+  }
+
   @Test
   public void should_fail_if_objects_are_not_equal_according_to_custom_comparison_strategy() {
     AssertionInfo info = someInfo();
     try {
       objectsWithCustomComparisonStrategy.assertEqual(info, "Luke", "Yoda");
     } catch (AssertionError e) {
-      verify(failures).failure(info, shouldBeEqual("Luke", "Yoda", customComparisonStrategy,
-          new StandardRepresentation()));
+      verify(failures).failure(info, shouldBeEqual("Luke", "Yoda", customComparisonStrategy, STANDARD_REPRESENTATION));
       return;
     }
     failBecauseExpectedAssertionErrorWasNotThrown();
   }
-
 
   @Test
   public void should_fail_with_my_exception_if_compared_with_null() {

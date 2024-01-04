@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,21 +8,22 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util;
 
-import org.assertj.core.api.exception.RuntimeIOException;
-import org.assertj.core.test.ExpectedException;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.test.ExpectedException.none;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.util.Files.linesOf;
 import static org.assertj.core.util.Lists.newArrayList;
 
@@ -40,20 +41,15 @@ public class Files_linesOf_Test {
   private static final List<String> EXPECTED_CONTENT = newArrayList("A text file encoded in UTF-8, with diacritics:", "é à");
   public static final String UTF_8 = "UTF-8";
 
-  @Rule
-  public ExpectedException thrown = none();
-
   @Test
   public void should_throw_exception_when_charset_is_null() {
     Charset charset = null;
-    thrown.expect(NullPointerException.class);
-    linesOf(SAMPLE_UNIX_FILE, charset);
+    assertThatNullPointerException().isThrownBy(() -> linesOf(SAMPLE_UNIX_FILE, charset));
   }
 
   @Test
   public void should_throw_exception_if_charset_name_does_not_exist() {
-    thrown.expect(IllegalArgumentException.class);
-    linesOf(new File("test"), "Klingon");
+    assertThatIllegalArgumentException().isThrownBy(() -> linesOf(new File("test"), "Klingon"));
   }
 
   @Test
@@ -61,13 +57,13 @@ public class Files_linesOf_Test {
     File missingFile = new File("missing.txt");
     assertThat(missingFile).doesNotExist();
 
-    thrown.expect(RuntimeIOException.class);
-    linesOf(missingFile, Charset.defaultCharset());
+    assertThatExceptionOfType(UncheckedIOException.class).isThrownBy(() -> linesOf(missingFile,
+                                                                                   Charset.defaultCharset()));
   }
 
   @Test
   public void should_pass_if_unix_file_is_split_into_lines() {
-    assertThat(linesOf(SAMPLE_UNIX_FILE, Charset.forName(UTF_8))).isEqualTo(EXPECTED_CONTENT);
+    assertThat(linesOf(SAMPLE_UNIX_FILE, StandardCharsets.UTF_8)).isEqualTo(EXPECTED_CONTENT);
   }
 
   @Test
@@ -77,7 +73,7 @@ public class Files_linesOf_Test {
 
   @Test
   public void should_pass_if_windows_file_is_split_into_lines() {
-    assertThat(linesOf(SAMPLE_WIN_FILE, Charset.forName(UTF_8))).isEqualTo(EXPECTED_CONTENT);
+    assertThat(linesOf(SAMPLE_WIN_FILE, StandardCharsets.UTF_8)).isEqualTo(EXPECTED_CONTENT);
   }
 
   @Test
@@ -87,7 +83,7 @@ public class Files_linesOf_Test {
 
   @Test
   public void should_pass_if_mac_file_is_split_into_lines() {
-    assertThat(linesOf(SAMPLE_MAC_FILE, Charset.forName(UTF_8))).isEqualTo(EXPECTED_CONTENT);
+    assertThat(linesOf(SAMPLE_MAC_FILE, StandardCharsets.UTF_8)).isEqualTo(EXPECTED_CONTENT);
   }
 
   @Test

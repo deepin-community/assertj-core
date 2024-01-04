@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,11 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
-import org.assertj.core.error.MessageFormatter;
+import static org.assertj.core.error.AssertionErrorMessagesAggregrator.aggregrateErrorMessages;
 
 import java.util.List;
 
@@ -26,7 +26,6 @@ import java.util.List;
 public class SoftAssertionError extends AssertionError {
   private static final long serialVersionUID = 5034494920024670595L;
   private final List<String> errors;
-  private static final MessageFormatter formatter = MessageFormatter.instance();
 
   /**
    * Creates a new SoftAssertionError.
@@ -34,25 +33,8 @@ public class SoftAssertionError extends AssertionError {
    * @param errors the causal AssertionError error messages in the order that they were thrown
    */
   public SoftAssertionError(List<String> errors) {
-    super(createMessage(errors));
+    super(aggregrateErrorMessages(errors));
     this.errors = errors;
-  }
-
-  private static String createMessage(List<String> errors) {
-    StringBuilder msg = new StringBuilder("%nThe following ");
-    int size = errors.size();
-
-    if (size == 1) {
-      msg.append("assertion");
-    } else {
-      msg.append(size).append(" assertions");
-    }
-    msg.append(" failed:%n");
-
-    for (int i = 0; i < size; i++) {
-      msg.append(i + 1).append(") ").append(errors.get(i)).append("%n");
-    }
-    return formatter.format(null,null,msg.toString());
   }
 
   /**

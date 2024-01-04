@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,11 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.assertj.core.util.Preconditions.checkNotNull;
 
@@ -21,10 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
-import org.assertj.core.presentation.Representation;
-
-public final class IterableUtil extends GroupFormatUtil {
+public final class IterableUtil {
 
   /**
    * Indicates whether the given {@link Iterable} is {@code null} or empty.
@@ -48,13 +48,7 @@ public final class IterableUtil extends GroupFormatUtil {
   public static int sizeOf(Iterable<?> iterable) {
     checkNotNull(iterable, "Iterable must not be null");
     if (iterable instanceof Collection) return ((Collection<?>) iterable).size();
-    int size = 0;
-    Iterator<?> iterator = iterable.iterator();
-    while (iterator.hasNext()) {
-      size++;
-      iterator.next();
-    }
-    return size;
+    return Math.toIntExact(Streams.stream(iterable).count());
   }
 
   /**
@@ -67,19 +61,15 @@ public final class IterableUtil extends GroupFormatUtil {
    */
   public static <T> List<T> nonNullElementsIn(Iterable<? extends T> i) {
     if (isNullOrEmpty(i)) return emptyList();
-    List<T> nonNull = new ArrayList<>();
-    for (T element : i) {
-      if (element != null) nonNull.add(element);
-    }
-    return nonNull;
+    return Streams.stream(i).filter(Objects::nonNull).collect(toList());
   }
 
   /**
    * Create an array from an {@link Iterable}.
-   * <p/>
+   * <p>
    * Note: this method will return Object[]. If you require a typed array please use {@link #toArray(Iterable, Class)}.
    * It's main usage is to keep the generic type for chaining call like in:
-   * <pre><code class='java'> public S containsOnlyElementsOf(Iterable<? extends T> iterable) {
+   * <pre><code class='java'> public S containsOnlyElementsOf(Iterable&lt;? extends T&gt; iterable) {
    *   return containsOnly(toArray(iterable));
    * }</code></pre>
    * 
@@ -110,67 +100,29 @@ public final class IterableUtil extends GroupFormatUtil {
     return collection.toArray(array);
   }
 
-  private static <T> Collection<T> toCollection(Iterable<T> iterable) {
+  public static <T> Collection<T> toCollection(Iterable<T> iterable) {
     return iterable instanceof Collection ? (Collection<T>) iterable : newArrayList(iterable);
+  }
+
+  @SafeVarargs
+  public static <T> Iterable<T> iterable(T... elements) {
+    if (elements == null) return null;
+    ArrayList<T> list = newArrayList();
+    java.util.Collections.addAll(list, elements);
+    return list;
+  }
+
+  @SafeVarargs
+  public static <T> Iterator<T> iterator(T... elements) {
+    if (elements == null) return null;
+    return iterable(elements).iterator();
   }
 
   @SuppressWarnings("unchecked")
   private static <T> T[] newArray(Class<T> type, int length) {
     return (T[]) Array.newInstance(type, length);
   }
-
-  /**
-   * Returns the {@code String} representation of the given {@code Iterable}, or {@code null} if the given
-   * {@code Iterable} is {@code null}.
-   * <p>
-   * The {@code Iterable} will be formatted to a single line if it does not exceed 100 char, otherwise each elements
-   * will be formatted on a new line with 4 space indentation.
-   * 
-   * @param representation
-   * @param iterable the {@code Iterable} to format.
-   * @return the {@code String} representation of the given {@code Iterable}.
-   */
-  public static String smartFormat(Representation representation, Iterable<?> iterable) {
-    String singleLineDescription = singleLineFormat(representation, iterable, DEFAULT_START, DEFAULT_END);
-    return doesDescriptionFitOnSingleLine(singleLineDescription) ?
-        singleLineDescription : multiLineFormat(representation, iterable);
-  }
-
-  public static String singleLineFormat(Representation representation, Iterable<?> iterable, String start, String end) {
-    return format(representation, iterable, start, end, ELEMENT_SEPARATOR, INDENTATION_FOR_SINGLE_LINE);
-  }
-
-  public static String multiLineFormat(Representation representation, Iterable<?> iterable) {
-    return format(representation, iterable, DEFAULT_START, DEFAULT_END, ELEMENT_SEPARATOR_WITH_NEWLINE,
-                  INDENTATION_AFTER_NEWLINE);
-  }
-
-  private static boolean doesDescriptionFitOnSingleLine(String singleLineDescription) {
-    return singleLineDescription == null || singleLineDescription.length() < maxLengthForSingleLineDescription;
-  }
-
-  public static String format(Representation representation, Iterable<?> iterable, String start, String end,
-                               String elementSeparator, String indentation) {
-    if (iterable == null) return null;
-    Iterator<?> iterator = iterable.iterator();
-    if (!iterator.hasNext()) return start + end;
-    // iterable has some elements
-    StringBuilder desc = new StringBuilder(start);
-    boolean firstElement = true;
-    while (true) {
-      Object element = iterator.next();
-      // do not indent first element
-      if (firstElement) firstElement = false;
-      else desc.append(indentation);
-      // add element representation
-      desc.append(element == iterable ? "(this Collection)" : representation.toStringOf(element));
-      // manage end description
-      if (!iterator.hasNext()) return desc.append(end).toString();
-      // there are still elements to be describe
-      desc.append(elementSeparator);
-    }
-  }
-
+  
   private IterableUtil() {}
 
 }

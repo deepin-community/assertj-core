@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.inputstreams;
 
@@ -23,20 +23,19 @@ import java.util.List;
 
 import org.assertj.core.internal.Diff;
 import org.assertj.core.util.diff.Delta;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link Diff#diff(InputStream, InputStream)}</code>.
- * 
+ *
  * @author Matthieu Baechler
  */
 public class Diff_diff_InputStream_Test {
 
-  private final static String LINE_SEPARATOR = System.getProperty("line.separator");
   private static Diff diff;
 
-  @BeforeClass
+  @BeforeAll
   public static void setUpOnce() {
     diff = new Diff();
   }
@@ -44,12 +43,9 @@ public class Diff_diff_InputStream_Test {
   private InputStream actual;
   private InputStream expected;
 
-  private InputStream stream(String... lines) throws UnsupportedEncodingException {
-    StringBuilder stringBuilder = new StringBuilder();
-    for (String line : lines) {
-      stringBuilder.append(line).append(LINE_SEPARATOR);
-    }
-    return new ByteArrayInputStream(stringBuilder.toString().getBytes("ASCII"));
+  static InputStream stream(String... lines) throws UnsupportedEncodingException {
+    String joinedLines = String.join(System.lineSeparator(), lines);
+    return new ByteArrayInputStream(joinedLines.getBytes("ASCII"));
   }
 
   @Test

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
+import static java.lang.String.format;
+import static java.util.Objects.hash;
 import static org.assertj.core.error.ShouldBeBetween.shouldBeBetween;
 import static org.assertj.core.error.ShouldBeEqual.shouldBeEqual;
 import static org.assertj.core.error.ShouldBeGreater.shouldBeGreater;
@@ -19,6 +21,7 @@ import static org.assertj.core.error.ShouldBeGreaterOrEqual.shouldBeGreaterOrEqu
 import static org.assertj.core.error.ShouldBeLess.shouldBeLess;
 import static org.assertj.core.error.ShouldBeLessOrEqual.shouldBeLessOrEqual;
 import static org.assertj.core.error.ShouldNotBeEqual.shouldNotBeEqual;
+import static org.assertj.core.util.Preconditions.checkArgument;
 import static org.assertj.core.util.Preconditions.checkNotNull;
 
 import java.util.Comparator;
@@ -28,29 +31,22 @@ import org.assertj.core.util.VisibleForTesting;
 
 /**
  * Reusable assertions for <code>{@link Comparable}</code>s.
- * 
+ *
  * @author Alex Ruiz
  * @author Joel Costigliola
  */
 public class Comparables {
 
-  private static final Comparables INSTANCE = new Comparables();
-
-  /**
-   * Returns the singleton instance of this class based on {@link StandardComparisonStrategy}.
-   * 
-   * @return the singleton instance of this class based on {@link StandardComparisonStrategy}.
-   */
-  public static Comparables instance() {
-    return INSTANCE;
-  }
+  private final ComparisonStrategy comparisonStrategy;
 
   @VisibleForTesting
   Failures failures = Failures.instance();
-  final ComparisonStrategy comparisonStrategy;
 
+  /**
+   * Build a {@link Comparables} using a {@link StandardComparisonStrategy}.
+   */
   @VisibleForTesting
-  Comparables() {
+  public Comparables() {
     this(StandardComparisonStrategy.instance());
   }
 
@@ -76,9 +72,37 @@ public class Comparables {
     this.failures = Failures.instance();
   }
 
+  @Override
+  public int hashCode() {
+    return hash(comparisonStrategy, failures);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    Comparables other = (Comparables) obj;
+    if (comparisonStrategy == null) {
+      if (other.comparisonStrategy != null) return false;
+    } else if (!comparisonStrategy.equals(other.comparisonStrategy)) return false;
+
+    if (failures == null) {
+      if (other.failures != null) return false;
+    } else if (!failures.equals(other.failures)) return false;
+
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return format("Comparables [comparisonStrategy=%s, failures=%s]", comparisonStrategy, failures);
+  }
+
   /**
    * Asserts that two T instances are equal.
-   * 
+   *
+   * @param <T> the type of actual and expected
    * @param info contains information about the assertion.
    * @param actual the actual value.
    * @param expected the expected value.
@@ -89,8 +113,7 @@ public class Comparables {
    */
   public <T> void assertEqual(AssertionInfo info, T actual, T expected) {
     assertNotNull(info, actual);
-    if (areEqual(actual, expected))
-      return;
+    if (areEqual(actual, expected)) return;
     throw failures.failure(info, shouldBeEqual(actual, expected, comparisonStrategy, info.representation()));
   }
 
@@ -100,7 +123,8 @@ public class Comparables {
 
   /**
    * Asserts that two T instances are not equal.
-   * 
+   *
+   * @param <T> the type of actual and expected
    * @param info contains information about the assertion.
    * @param actual the actual value.
    * @param other the value to compare the actual value to.
@@ -118,7 +142,7 @@ public class Comparables {
    * Asserts that two <code>{@link Comparable}</code>s are equal by invoking
    * <code>{@link Comparable#compareTo(Object)}</code>.<br>
    * Note that it does not rely on the custom {@link #comparisonStrategy} if one has been set.
-   * 
+   *
    * @param <T> used to guarantee that two objects of the same type are being compared against each other.
    * @param info contains information about the assertion.
    * @param actual the actual value.
@@ -140,7 +164,7 @@ public class Comparables {
    * Asserts that two <code>{@link Comparable}</code>s are not equal by invoking
    * <code>{@link Comparable#compareTo(Object)}</code> .<br>
    * Note that it does not rely on the custom {@link #comparisonStrategy} if one has been set.
-   * 
+   *
    * @param <T> used to guarantee that two objects of the same type are being compared against each other.
    * @param info contains information about the assertion.
    * @param actual the actual value.
@@ -150,7 +174,7 @@ public class Comparables {
    */
   public <T extends Comparable<? super T>> void assertNotEqualByComparison(AssertionInfo info, T actual, T other) {
     assertNotNull(info, actual);
-    // we don't delagate to comparisonStrategy, as this assertion makes it clear it relies on Comparable
+    // we don't delegate to comparisonStrategy, as this assertion makes it clear it relies on Comparable
     if (actual.compareTo(other) != 0)
       return;
     throw failures.failure(info, shouldNotBeEqual(actual, other));
@@ -158,7 +182,7 @@ public class Comparables {
 
   /**
    * Asserts that the actual value is less than the other one.
-   * 
+   *
    * @param <T> used to guarantee that two objects of the same type are being compared against each other.
    * @param info contains information about the assertion.
    * @param actual the actual value.
@@ -176,7 +200,7 @@ public class Comparables {
 
   /**
    * Asserts that the actual value is less than or equal to the other one.
-   * 
+   *
    * @param <T> used to guarantee that two objects of the same type are being compared against each other.
    * @param info contains information about the assertion.
    * @param actual the actual value.
@@ -193,7 +217,7 @@ public class Comparables {
 
   /**
    * Asserts that the actual value is greater than the other one.
-   * 
+   *
    * @param <T> used to guarantee that two objects of the same type are being compared against each other.
    * @param info contains information about the assertion.
    * @param actual the actual value.
@@ -209,16 +233,13 @@ public class Comparables {
     throw failures.failure(info, shouldBeGreater(actual, other, comparisonStrategy));
   }
 
-  /**
-   * delegates to {@link #comparisonStrategy#isGreaterThan(Object, Object)}
-   */
   private boolean isGreaterThan(Object actual, Object other) {
     return comparisonStrategy.isGreaterThan(actual, other);
   }
 
   /**
    * Asserts that the actual value is greater than or equal to the other one.
-   * 
+   *
    * @param <T> used to guarantee that two objects of the same type are being compared against each other.
    * @param info contains information about the assertion.
    * @param actual the actual value.
@@ -243,7 +264,7 @@ public class Comparables {
 
   /**
    * Asserts that the actual value is between start and end, inclusive or not.
-   * 
+   *
    * @param <T> used to guarantee that two objects of the same type are being compared against each other.
    * @param info contains information about the assertion.
    * @param actual the actual value.
@@ -255,18 +276,30 @@ public class Comparables {
    * @throws AssertionError if the actual value is not between start and end.
    * @throws NullPointerException if start value is {@code null}.
    * @throws NullPointerException if end value is {@code null}.
+   * @throws IllegalArgumentException if end value is less than start value.
    */
   public <T extends Comparable<? super T>> void assertIsBetween(AssertionInfo info, T actual, T start, T end,
-      boolean inclusiveStart, boolean inclusiveEnd) {
+                                                                boolean inclusiveStart, boolean inclusiveEnd) {
     assertNotNull(info, actual);
     checkNotNull(start, "The start range to compare actual with should not be null");
     checkNotNull(end, "The end range to compare actual with should not be null");
-    boolean checkLowerBoundaryRange = inclusiveStart ? !isGreaterThan(start, actual)
-        : isLessThan(start, actual);
-    boolean checkUpperBoundaryRange = inclusiveEnd ? !isGreaterThan(actual, end)
-        : isLessThan(actual, end);
+    checkBoundsValidity(start, end, inclusiveStart, inclusiveEnd);
+    boolean checkLowerBoundaryRange = inclusiveStart ? !isGreaterThan(start, actual) : isLessThan(start, actual);
+    boolean checkUpperBoundaryRange = inclusiveEnd ? !isGreaterThan(actual, end) : isLessThan(actual, end);
     if (checkLowerBoundaryRange && checkUpperBoundaryRange)
       return;
     throw failures.failure(info, shouldBeBetween(actual, start, end, inclusiveStart, inclusiveEnd, comparisonStrategy));
+  }
+
+  protected <T extends Comparable<? super T>> void checkBoundsValidity(T start, T end, boolean inclusiveStart,
+                                                                       boolean inclusiveEnd) {
+    // don't use isLessThanOrEqualTo or isGreaterThanOrEqualTo to avoid equal comparison which makes BigDecimal
+    // to fail when start = end with different precision, ex: [10.0, 10.00].
+    boolean inclusiveBoundsCheck = inclusiveEnd && inclusiveStart && !isGreaterThan(start, end);
+    boolean strictBoundsCheck = !inclusiveEnd && !inclusiveStart && isLessThan(start, end);
+    String operator = inclusiveEnd && inclusiveStart ? "less than" : "less than or equal to";
+    String boundsCheckErrorMessage = format("The end value <%s> must not be %s the start value <%s>%s!", end, operator, start,
+                                            (comparisonStrategy.isStandard() ? "" : " (using " + comparisonStrategy + ")"));
+    checkArgument(inclusiveBoundsCheck || strictBoundsCheck, boundsCheckErrorMessage);
   }
 }

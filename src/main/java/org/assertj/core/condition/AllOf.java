@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,16 +8,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.condition;
 
 import org.assertj.core.api.Condition;
 
 /**
- * Returns {@code true} if all of the joined conditions is satisfied.
+ * Returns {@code true} if all of the joined conditions are satisfied.
  * @param <T> the type of object this condition accepts.
- * 
+ *
  * @author Yvonne Wang
  * @author Mikhail Mazursky
  */
@@ -27,7 +27,7 @@ public class AllOf<T> extends Join<T> {
    * Creates a new <code>{@link AllOf}</code>
    * @param <T> the type of object the given condition accept.
    * @param conditions the conditions to evaluate.
-   * @return the created {@code AnyOf}.
+   * @return the created {@code AllOf}.
    * @throws NullPointerException if the given array is {@code null}.
    * @throws NullPointerException if any of the elements in the given array is {@code null}.
    */
@@ -40,7 +40,7 @@ public class AllOf<T> extends Join<T> {
    * Creates a new <code>{@link AllOf}</code>
    * @param <T> the type of object the given condition accept.
    * @param conditions the conditions to evaluate.
-   * @return the created {@code AnyOf}.
+   * @return the created {@code AllOf}.
    * @throws NullPointerException if the given iterable is {@code null}.
    * @throws NullPointerException if any of the elements in the given iterable is {@code null}.
    */
@@ -60,13 +60,11 @@ public class AllOf<T> extends Join<T> {
   /** {@inheritDoc} */
   @Override
   public boolean matches(T value) {
-    for (Condition<? super T> condition : conditions)
-      if (!condition.matches(value)) return false;
-    return true;
+    return conditions.stream().allMatch(condition -> condition.matches(value));
   }
 
   @Override
-  public String toString() {
-    return String.format("all of:<%s>", conditions);
+  public String descriptionPrefix() {
+    return "all of";
   }
 }
