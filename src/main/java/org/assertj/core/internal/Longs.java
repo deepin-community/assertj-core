@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,26 +8,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
-import static java.lang.Math.abs;
-import static org.assertj.core.data.Offset.offset;
-import static org.assertj.core.error.ShouldBeEqualWithinOffset.shouldBeEqual;
-import static org.assertj.core.error.ShouldBeEqualWithinPercentage.shouldBeEqualWithinPercentage;
-import static org.assertj.core.internal.CommonValidations.checkNumberIsNotNull;
-import static org.assertj.core.internal.CommonValidations.checkOffsetIsNotNull;
-import static org.assertj.core.internal.CommonValidations.checkPercentageIsNotNull;
-
-import org.assertj.core.api.AssertionInfo;
-import org.assertj.core.data.Offset;
-import org.assertj.core.data.Percentage;
 import org.assertj.core.util.VisibleForTesting;
 
 /**
  * Reusable assertions for <code>{@link Long}</code>s.
  * 
+ * @author Drummond Dawson
  * @author Alex Ruiz
  * @author Joel Costigliola
  */
@@ -44,11 +34,6 @@ public class Longs extends Numbers<Long> {
     return INSTANCE;
   }
 
-  @Override
-  protected Long zero() {
-    return 0L;
-  }
-
   @VisibleForTesting
   Longs() {
     super();
@@ -59,25 +44,23 @@ public class Longs extends Numbers<Long> {
   }
 
   @Override
-  public void assertIsCloseTo(AssertionInfo info, Long actual, Long expected, Offset<Long> offset) {
-    assertNotNull(info, actual);
-    checkOffsetIsNotNull(offset);
-    checkNumberIsNotNull(expected);
-    long absDiff = abs(expected - actual);
-    if (absDiff > offset.value) throw failures.failure(info, shouldBeEqual(actual, expected, offset, absDiff));
+  protected Long zero() {
+    return 0L;
   }
 
   @Override
-  public void assertIsCloseToPercentage(AssertionInfo info, Long actual, Long other, Percentage percentage) {
-    assertNotNull(info, actual);
-    checkPercentageIsNotNull(percentage);
-    checkNumberIsNotNull(other);
+  protected Long one() {
+    return 1L;
+  }
 
-    Offset<Double> calculatedOffset = offset(percentage.value * other / 100d);
+  @Override
+  protected Long absDiff(Long actual, Long other) {
+    return Math.abs(actual - other);
+  }
 
-    Long absDiff = abs(other - actual);
-    if (absDiff > calculatedOffset.value)
-      throw failures.failure(info, shouldBeEqualWithinPercentage(actual, other, percentage, absDiff));
+  @Override
+  protected boolean isGreaterThan(Long value, Long other) {
+    return value > other;
   }
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,19 +8,19 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.util.Lists.newArrayList;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link IterableUtil#sizeOf(Iterable)}</code>.
@@ -31,12 +31,12 @@ import org.junit.Test;
 public class IterableUtil_sizeOf_Test {
   @Test
   public void should_return_zero_if_iterable_is_empty() {
-    assertThat(IterableUtil.sizeOf(new ArrayList<String>())).isEqualTo(0);
+    assertThat(IterableUtil.sizeOf(new ArrayList<>())).isEqualTo(0);
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void should_throws_exception_if_iterable_is_null() {
-    IterableUtil.sizeOf(null);
+    assertThatNullPointerException().isThrownBy(() -> IterableUtil.sizeOf(null));
   }
 
   @Test

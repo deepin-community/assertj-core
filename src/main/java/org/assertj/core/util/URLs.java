@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,18 +8,18 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util;
 
+import static org.assertj.core.util.Preconditions.checkArgument;
 import static org.assertj.core.util.Preconditions.checkNotNull;
 
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.List;
-
-import org.assertj.core.api.exception.RuntimeIOException;
+import java.util.stream.Collectors;
 
 /**
  * Utility methods related to URLs.
@@ -29,6 +29,9 @@ import org.assertj.core.api.exception.RuntimeIOException;
  */
 public class URLs {
 
+  private URLs() {
+  }
+
   /**
    * Loads the text content of a URL into a character string.
    *
@@ -36,12 +39,10 @@ public class URLs {
    * @param charsetName the name of the character set to use.
    * @return the content of the file.
    * @throws IllegalArgumentException if the given character set is not supported on this platform.
-   * @throws RuntimeIOException if an I/O exception occurs.
+   * @throws UncheckedIOException if an I/O exception occurs.
    */
   public static String contentOf(URL url, String charsetName) {
-    if (!Charset.isSupported(charsetName)) {
-      throw new IllegalArgumentException(String.format("Charset:<'%s'> is not supported on this system", charsetName));
-    }
+    checkArgumentCharsetIsSupported(charsetName);
     return contentOf(url, Charset.forName(charsetName));
   }
 
@@ -52,14 +53,14 @@ public class URLs {
    * @param charset the character set to use.
    * @return the content of the URL.
    * @throws NullPointerException if the given charset is {@code null}.
-   * @throws RuntimeIOException if an I/O exception occurs.
+   * @throws UncheckedIOException if an I/O exception occurs.
    */
   public static String contentOf(URL url, Charset charset) {
     checkNotNull(charset, "The charset should not be null");
     try {
       return loadContents(url.openStream(), charset);
     } catch (IOException e) {
-      throw new RuntimeIOException("Unable to read " + url, e);
+      throw new UncheckedIOException("Unable to read " + url, e);
     }
   }
 
@@ -71,14 +72,14 @@ public class URLs {
    * @param charset the character set to use.
    * @return the content of the URL.
    * @throws NullPointerException if the given charset is {@code null}.
-   * @throws RuntimeIOException if an I/O exception occurs.
+   * @throws UncheckedIOException if an I/O exception occurs.
    */
   public static List<String> linesOf(URL url, Charset charset) {
     checkNotNull(charset, "The charset should not be null");
     try {
       return loadLines(url.openStream(), charset);
     } catch (IOException e) {
-      throw new RuntimeIOException("Unable to read " + url, e);
+      throw new UncheckedIOException("Unable to read " + url, e);
     }
   }
 
@@ -90,62 +91,32 @@ public class URLs {
    * @param charsetName the name of the character set to use.
    * @return the content of the URL.
    * @throws NullPointerException if the given charset is {@code null}.
-   * @throws RuntimeIOException if an I/O exception occurs.
+   * @throws UncheckedIOException if an I/O exception occurs.
    */
   public static List<String> linesOf(URL url, String charsetName) {
-    if (!Charset.isSupported(charsetName)) {
-      throw new IllegalArgumentException(String.format("Charset:<'%s'> is not supported on this system", charsetName));
-    }
+    checkArgumentCharsetIsSupported(charsetName);
     return linesOf(url, Charset.forName(charsetName));
   }
 
   private static String loadContents(InputStream stream, Charset charset) throws IOException {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(stream, charset));
-    boolean threw = true;
-    try {
-      StringWriter writer = new StringWriter();
+    try (StringWriter writer = new StringWriter();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream, charset))) {
       int c;
       while ((c = reader.read()) != -1) {
         writer.write(c);
       }
-      threw = false;
       return writer.toString();
-    } finally {
-      try {
-        reader.close();
-      } catch (IOException e) {
-        if (!threw) {
-          throw e; // if there was an initial exception, don't hide it
-        }
-      }
     }
   }
 
   private static List<String> loadLines(InputStream stream, Charset charset) throws IOException {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(stream, charset));
-
-    boolean threw = true;
-    try {
-      List<String> strings = Lists.newArrayList();
-
-      String line = reader.readLine();
-      while (line != null) {
-        strings.add(line);
-        line = reader.readLine();
-      }
-
-      threw = false;
-      return strings;
-
-    } finally {
-      try {
-        reader.close();
-      } catch (IOException e) {
-        if (!threw) {
-          throw e; // if there was an initial exception, don't hide it
-        }
-      }
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, charset))) {
+      return reader.lines().collect(Collectors.toList());
     }
+  }
+
+  private static void checkArgumentCharsetIsSupported(String charsetName) {
+    checkArgument(Charset.isSupported(charsetName), "Charset:<'%s'> is not supported on this system", charsetName);
   }
 
 }

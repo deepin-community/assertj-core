@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,16 +8,15 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.test.ExpectedException.none;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import org.assertj.core.test.ExpectedException;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for {@link org.assertj.core.presentation.UnicodeRepresentation#toStringOf(Object)}.
@@ -26,24 +25,22 @@ import org.junit.Test;
  */
 public class Assertions_assertThat_inUnicode_Test {
 
-  @Rule
-  public ExpectedException thrown = none();
-
   @Test
   public void should_assert_String_in_unicode() {
-    thrown.expectMessage("expected:<a[b\\u00f3]> but was:<a[6c]>");
-    assertThat("a6c").inUnicode().isEqualTo("abó");
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> assertThat("a6c").inUnicode().isEqualTo("abó"))
+                                                   .withMessage(format("%nExpecting:%n <a6c>%nto be equal to:%n <ab\\u00f3>%nbut was not."));
   }
 
   @Test
   public void should_assert_Character_in_unicode() {
-    thrown.expectMessage("expected:<[\\u00f3]> but was:<[o]>");
-    assertThat('o').inUnicode().isEqualTo('ó');
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> assertThat('o').inUnicode().isEqualTo('ó'))
+                                                   .withMessage(format("%nExpecting:%n <o>%nto be equal to:%n <\\u00f3>%nbut was not."));
   }
 
   @Test
   public void should_assert_char_array_in_unicode_representation() {
-    thrown.expectMessage("expected:<[a, [b, \\u00f3]]> but was:<[a, [6, c]]>");
-    assertThat("a6c".toCharArray()).inUnicode().isEqualTo("abó".toCharArray());
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> assertThat("a6c".toCharArray()).inUnicode()
+                                                                                                    .isEqualTo("abó".toCharArray()))
+                                                   .withMessage(format("%nExpecting:%n <[a, 6, c]>%nto be equal to:%n <[a, b, \\u00f3]>%nbut was not."));
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.error;
 
@@ -50,6 +50,17 @@ public class ShouldHaveSameContent extends AbstractShouldHaveTextContent {
   public static ErrorMessageFactory shouldHaveSameContent(InputStream actual, InputStream expected, List<Delta<String>> diffs) {
     return new ShouldHaveSameContent(actual, expected, diffsAsString(diffs));
   }
+
+  /**
+   * Creates a new <code>{@link ShouldHaveSameContent}</code>.
+   * @param actual the actual InputStream in the failed assertion.
+   * @param expected the expected String in the failed assertion.
+   * @param diffs the differences between {@code actual} and {@code expected}.
+   * @return the created {@code ErrorMessageFactory}.
+   */
+  public static ErrorMessageFactory shouldHaveSameContent(InputStream actual, String expected, List<Delta<String>> diffs) {
+    return new ShouldHaveSameContent(actual, expected, diffsAsString(diffs));
+  }
   
   /**
    * Creates a new <code>{@link ShouldHaveSameContent}</code>.
@@ -63,17 +74,22 @@ public class ShouldHaveSameContent extends AbstractShouldHaveTextContent {
   }
 
   private ShouldHaveSameContent(File actual, File expected, String diffs) {
-    super("%nFile:%n  <%s>%nand file:%n  <%s>%ndo not have same content:%n", actual, expected);
+    super("%nFile:%n  <%s>%nand file:%n  <%s>%ndo not have same content:%n%n", actual, expected);
     this.diffs = diffs;
   }
 
   private ShouldHaveSameContent(InputStream actual, InputStream expected, String diffs) {
-    super("%nInputStreams do not have same content:%n", actual, expected);
+    super("%nInputStreams do not have same content:%n%n", actual, expected);
+    this.diffs = diffs;
+  }
+
+  private ShouldHaveSameContent(InputStream actual, String expected, String diffs) {
+    super("%nInputStream does not have same content as String:%n%n", actual, expected);
     this.diffs = diffs;
   }
   
   private ShouldHaveSameContent(Path actual, Path expected, String diffs) {
-    super("%nPath:%n  <%s>%nand path:%n  <%s>%ndo not have same content:%n", actual, expected);
+    super("%nPath:%n  <%s>%nand path:%n  <%s>%ndo not have same content:%n%n", actual, expected);
     this.diffs = diffs;
   }
 }

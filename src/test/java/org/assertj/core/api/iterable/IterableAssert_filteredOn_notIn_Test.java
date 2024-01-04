@@ -1,6 +1,4 @@
-package org.assertj.core.api.iterable;
-
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -10,16 +8,18 @@ package org.assertj.core.api.iterable;
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
+package org.assertj.core.api.iterable;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.notIn;
 import static org.assertj.core.api.Assertions.setAllowExtractingPrivateFields;
 
 import org.assertj.core.util.introspection.IntrospectionError;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class IterableAssert_filteredOn_notIn_Test extends IterableAssert_filtered_baseTest {
 
@@ -52,18 +52,18 @@ public class IterableAssert_filteredOn_notIn_Test extends IterableAssert_filtere
   public void should_fail_if_filter_is_on_private_field_and_reading_private_field_is_disabled() {
     setAllowExtractingPrivateFields(false);
     try {
-      assertThat(employees).filteredOn("city", notIn("New York")).isEmpty();
-      failBecauseExceptionWasNotThrown(IntrospectionError.class);
-    } catch (IntrospectionError e) {
-      // expected
+      assertThatExceptionOfType(IntrospectionError.class).isThrownBy(() -> {
+        assertThat(employees).filteredOn("city", notIn("New York")).isEmpty();
+      });
     } finally {
       setAllowExtractingPrivateFields(true);
     }
   }
 
   @Test
-  public void should_filter_iterator_under_test_on_property_values() {
-    assertThat(employees.iterator()).filteredOn("age", notIn(800)).containsOnly(luke, noname);
+  public void should_filter_stream_under_test_on_property_values() {
+    assertThat(employees.stream()).filteredOn("age", notIn(800))
+                                  .containsOnly(luke, noname);
   }
 
   @Test
@@ -74,30 +74,27 @@ public class IterableAssert_filteredOn_notIn_Test extends IterableAssert_filtere
   @Test
   public void should_filter_iterable_under_test_on_nested_mixed_property_and_field_values() {
     assertThat(employees).filteredOn("name.last", notIn("Skywalker")).containsOnly(yoda, obiwan, noname);
-    assertThat(employees).filteredOn("name.last", notIn("Skywalker", null)).isEmpty();;
+    assertThat(employees).filteredOn("name.last", notIn("Skywalker", null)).isEmpty();
     assertThat(employees).filteredOn("name.last", notIn("Vader")).containsOnly(yoda, obiwan, noname, luke);
   }
 
   @Test
   public void should_fail_if_given_property_or_field_name_is_null() {
-    thrown.expectIllegalArgumentException("The property/field name to filter on should not be null or empty");
-    assertThat(employees).filteredOn(null, notIn(800));
+    assertThatIllegalArgumentException().isThrownBy(() -> assertThat(employees).filteredOn(null, notIn(800)))
+                                        .withMessage("The property/field name to filter on should not be null or empty");
   }
 
   @Test
   public void should_fail_if_given_property_or_field_name_is_empty() {
-    thrown.expectIllegalArgumentException("The property/field name to filter on should not be null or empty");
-    assertThat(employees).filteredOn("", notIn(800));
+    assertThatIllegalArgumentException().isThrownBy(() -> assertThat(employees).filteredOn("", notIn(800)))
+                                        .withMessage("The property/field name to filter on should not be null or empty");
   }
 
   @Test
   public void should_fail_if_on_of_the_iterable_element_does_not_have_given_property_or_field() {
-    try {
-      assertThat(employees).filteredOn("secret", notIn("???"));
-      failBecauseExceptionWasNotThrown(IntrospectionError.class);
-    } catch (IntrospectionError e) {
-      assertThat(e).hasMessageContaining("Can't find any field or property with name 'secret'");
-    }
+    assertThatExceptionOfType(IntrospectionError.class).isThrownBy(() -> assertThat(employees).filteredOn("secret",
+                                                                                                          notIn("???")))
+                                                       .withMessageContaining("Can't find any field or property with name 'secret'");
   }
 
 }

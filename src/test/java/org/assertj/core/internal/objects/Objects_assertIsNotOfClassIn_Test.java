@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,16 +8,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.objects;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldNotBeOfClassIn.shouldNotBeOfClassIn;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
-
-
 import static org.mockito.Mockito.verify;
 
 import java.io.File;
@@ -26,8 +26,8 @@ import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.Objects;
 import org.assertj.core.internal.ObjectsBaseTest;
 import org.assertj.core.test.Person;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -40,7 +40,7 @@ public class Objects_assertIsNotOfClassIn_Test extends ObjectsBaseTest {
 
   private static Person actual;
 
-  @BeforeClass
+  @BeforeAll
   public static void setUpOnce() {
     actual = new Person("Yoda");
   }
@@ -59,15 +59,15 @@ public class Objects_assertIsNotOfClassIn_Test extends ObjectsBaseTest {
 
   @Test
   public void should_throw_error_if_type_is_null() {
-    thrown.expectNullPointerException("The given types should not be null");
-    objects.assertIsNotOfAnyClassIn(someInfo(), actual, null);
+    assertThatNullPointerException().isThrownBy(() -> objects.assertIsNotOfAnyClassIn(someInfo(), actual, null))
+                                    .withMessage("The given types should not be null");
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
     Class<?>[] types = new Class[] { File.class, Person.class, String.class };
-    thrown.expectAssertionError(actualIsNull());
-    objects.assertIsNotOfAnyClassIn(someInfo(), null, types);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> objects.assertIsNotOfAnyClassIn(someInfo(), null, types))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test

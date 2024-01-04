@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.error.ShouldBeAtIndex.shouldBeAtIndex;
 import static org.assertj.core.error.ShouldBeSorted.shouldBeSorted;
 import static org.assertj.core.error.ShouldBeSorted.shouldBeSortedAccordingToGivenComparator;
@@ -23,9 +24,9 @@ import static org.assertj.core.error.ShouldNotContainAtIndex.shouldNotContainAtI
 import static org.assertj.core.internal.CommonValidations.checkIndexValueIsValid;
 import static org.assertj.core.util.Preconditions.checkNotNull;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.api.Condition;
@@ -35,10 +36,11 @@ import org.assertj.core.util.VisibleForTesting;
 
 /**
  * Reusable assertions for <code>{@link List}</code>s.
- * 
+ *
  * @author Alex Ruiz
  * @author Yvonne Wang
  * @author Joel Costigliola
+ * @author Jacek Jackowiak
  */
 // TODO inherits from Collections to avoid repeating comparisonStrategy ?
 public class Lists {
@@ -116,7 +118,7 @@ public class Lists {
   }
 
   /**
-   * Verifies that the actual list is sorted into ascending order according to the natural ordering of its elements.
+   * Verifies that the actual list is sorted in ascending order according to the natural ordering of its elements.
    * <p>
    * All list elements must implement the {@link Comparable} interface and must be mutually comparable (that is, e1.compareTo(e2)
    * must not throw a ClassCastException for any elements e1 and e2 in the list), examples :
@@ -125,12 +127,12 @@ public class Lists {
    * <li>a list composed of Rectangle {r1, r2, r3} is <b>NOT ok</b> because Rectangle is not Comparable</li>
    * <li>a list composed of {True, "abc", False} is <b>NOT ok</b> because elements are not mutually comparable</li>
    * </ul>
-   * Empty lists are considered sorted.</br> Unique element lists are considered sorted unless the element type is not Comparable.
-   * 
+   * Empty lists are considered sorted.<br> Unique element lists are considered sorted unless the element type is not Comparable.
+   *
    * @param info contains information about the assertion.
    * @param actual the given {@code List}.
-   * 
-   * @throws AssertionError if the actual list is not sorted into ascending order according to the natural ordering of its
+   *
+   * @throws AssertionError if the actual list is not sorted in ascending order according to the natural ordering of its
    *           elements.
    * @throws AssertionError if the actual list is <code>null</code>.
    * @throws AssertionError if the actual list element type does not implement {@link Comparable}.
@@ -161,17 +163,17 @@ public class Lists {
   }
 
   /**
-   * Verifies that the actual list is sorted according to the given comparator.</br> Empty lists are considered sorted whatever
-   * the comparator is.</br> One element lists are considered sorted if element is compatible with comparator.
-   * 
+   * Verifies that the actual list is sorted according to the given comparator.<br> Empty lists are considered sorted whatever
+   * the comparator is.<br> One element lists are considered sorted if the element is compatible with comparator.
+   *
    * @param info contains information about the assertion.
    * @param actual the given {@code List}.
    * @param comparator the {@link Comparator} used to compare list elements
-   * 
+   *
    * @throws AssertionError if the actual list is not sorted according to the given comparator.
    * @throws AssertionError if the actual list is <code>null</code>.
    * @throws NullPointerException if the given comparator is <code>null</code>.
-   * @throws AssertionError if the actual list elements are not mutually comparabe according to given Comparator.
+   * @throws AssertionError if the actual list elements are not mutually comparable according to given Comparator.
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public void assertIsSortedAccordingToComparator(AssertionInfo info, List<?> actual, Comparator<?> comparator) {
@@ -238,6 +240,13 @@ public class Lists {
     throw failures.failure(info, shouldBeAtIndex(actual, condition, index, actual.get(index.value)));
   }
 
+  public <T> void satisfies(AssertionInfo info, List<? extends T> actual, Consumer<? super T> requirements, Index index) {
+    assertNotNull(info, actual);
+    checkNotNull(requirements, "The Consumer expressing the assertions requirements must not be null");
+    checkIndexValueIsValid(index, actual.size() - 1);
+    requirements.accept(actual.get(index.value));
+  }
+
   private <T> boolean conditionIsMetAtIndex(AssertionInfo info, List<T> actual, Condition<? super T> condition, Index index) {
     assertNotNull(info, actual);
     assertNotNull(condition);
@@ -248,11 +257,7 @@ public class Lists {
 
   @SuppressWarnings("unchecked")
   private static List<Comparable<Object>> listOfComparableElements(List<?> collection) {
-    List<Comparable<Object>> listOfComparableElements = new ArrayList<>();
-    for (Object object : collection) {
-      listOfComparableElements.add((Comparable<Object>) object);
-    }
-    return listOfComparableElements;
+    return collection.stream().map(object -> (Comparable<Object>) object).collect(toList());
   }
 
   private void assertNotNull(AssertionInfo info, List<?> actual) {
@@ -263,9 +268,6 @@ public class Lists {
     Conditions.instance().assertIsNotNull(condition);
   }
 
-  /**
-   * Delegates to {@link ComparisonStrategy#areEqual(Object, Object)}
-   */
   private boolean areEqual(Object actual, Object other) {
     return comparisonStrategy.areEqual(actual, other);
   }

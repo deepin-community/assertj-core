@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,22 +8,18 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api.abstract_;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.test.ErrorMessages.descriptionIsNull;
-import static org.assertj.core.test.ExpectedException.none;
 import static org.assertj.core.test.TestData.someDescription;
 
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.ConcreteAssert;
 import org.assertj.core.description.Description;
-import org.assertj.core.test.ExpectedException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link AbstractAssert#describedAs(Description)}</code>
@@ -32,13 +28,10 @@ import org.junit.Test;
  */
 public class AbstractAssert_describedAs_with_description_Test {
 
-  @Rule
-  public ExpectedException thrown = none();
-
   private ConcreteAssert assertions;
   private Description description;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     assertions = new ConcreteAssert(6L);
     description = someDescription();
@@ -56,8 +49,10 @@ public class AbstractAssert_describedAs_with_description_Test {
   }
 
   @Test
-  public void should_throw_error_if_description_is_null() {
-    thrown.expectNullPointerException(descriptionIsNull());
-    assertions.describedAs((Description) null);
+  public void should_set_empty_description_if_description_is_null() {
+    Description description = null;
+    assertions.describedAs(description);
+    assertThat(assertions.descriptionText()).isEmpty();
   }
+
 }

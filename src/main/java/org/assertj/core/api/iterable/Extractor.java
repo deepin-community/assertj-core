@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,22 +8,33 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api.iterable;
 
-import org.assertj.core.api.ListAssert;
-import org.assertj.core.api.ObjectArrayAssert;
+import java.util.function.Function;
+
+import org.assertj.core.api.AbstractIterableAssert;
+import org.assertj.core.api.AbstractObjectArrayAssert;
+import org.assertj.core.api.AtomicReferenceArrayAssert;
 
 /**
- * Function converting an element to another element. Used in {@link ListAssert#extracting(Extractor)} and
- * {@link ObjectArrayAssert#extracting(Extractor)}.
+ * Function converting an element to another element. Used in {@link AbstractIterableAssert#extracting(Function)},
+ * {@link AbstractObjectArrayAssert#extracting(Function)} and {@link AtomicReferenceArrayAssert#extracting(Function)}.
  * 
  * @author Mateusz Haligowski
  *
  * @param <F> type of element from which the conversion happens
  * @param <T> target element type
+ * @deprecated use {@link Function} instead
  */
-public interface Extractor<F, T> {
+@FunctionalInterface
+public interface Extractor<F, T> extends Function<F, T> {
+
+  @Override
+  default T apply(F f) {
+    return extract(f);
+  }
+
   T extract(F input);
 }

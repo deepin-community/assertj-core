@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,18 +8,18 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.shorts;
 
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.test.TestData.someInfo;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.Shorts;
 import org.assertj.core.internal.ShortsBaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -37,11 +37,8 @@ public class Shorts_assertIsZero_Test extends ShortsBaseTest {
 
   @Test
   public void should_fail_since_actual_is_not_zero() {
-    try {
-      shorts.assertIsZero(someInfo(), (short) 2);
-    } catch (AssertionError e) {
-      assertThat(e.getMessage()).isEqualTo("expected:<[0]> but was:<[2]>");
-    }
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> shorts.assertIsZero(someInfo(), (short) 2))
+                                                   .withMessage(format("%nExpecting:%n <2>%nto be equal to:%n <0>%nbut was not."));
   }
 
   @Test
@@ -51,11 +48,8 @@ public class Shorts_assertIsZero_Test extends ShortsBaseTest {
 
   @Test
   public void should_fail_since_actual_is_zero_whatever_custom_comparison_strategy_is() {
-    try {
-      shortsWithAbsValueComparisonStrategy.assertIsNotZero(someInfo(), (short) 0);
-    } catch (AssertionError e) {
-      assertThat(e.getMessage()).isEqualTo(String.format("%nExpecting:%n <0>%nnot to be equal to:%n <0>%n"));
-    }
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> shortsWithAbsValueComparisonStrategy.assertIsNotZero(someInfo(), (short) 0))
+                                                   .withMessage(format("%nExpecting:%n <0>%nnot to be equal to:%n <0>%n"));
   }
 
 }

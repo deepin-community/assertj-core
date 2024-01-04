@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,14 +8,13 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.longs;
 
-import org.assertj.core.api.AssertionInfo;
-import org.assertj.core.internal.LongsBaseTest;
-import org.junit.Test;
-
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.api.Assertions.withinPercentage;
 import static org.assertj.core.data.Percentage.withPercentage;
 import static org.assertj.core.error.ShouldBeEqualWithinPercentage.shouldBeEqualWithinPercentage;
@@ -24,49 +23,62 @@ import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErr
 import static org.assertj.core.util.FailureMessages.actualIsNull;
 import static org.mockito.Mockito.verify;
 
+import org.assertj.core.api.AssertionInfo;
+import org.assertj.core.internal.LongsBaseTest;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
 public class Longs_assertIsCloseToPercentage_Test extends LongsBaseTest {
 
     private static final Long ZERO = 0L;
     private static final Long ONE = 1L;
-    private static final Long TWO = 2L;
     private static final Long TEN = 10L;
 
     @Test
     public void should_fail_if_actual_is_null() {
-        thrown.expectAssertionError(actualIsNull());
-        longs.assertIsCloseToPercentage(someInfo(), null, ONE, withPercentage(ONE));
-    }
+        assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> longs.assertIsCloseToPercentage(someInfo(), null, ONE, withPercentage(ONE)))
+                                                   .withMessage(actualIsNull());
+   }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void should_fail_if_expected_value_is_null() {
-        longs.assertIsCloseToPercentage(someInfo(), ONE, null, withPercentage(ONE));
+      assertThatNullPointerException().isThrownBy(() -> longs.assertIsCloseToPercentage(someInfo(), ONE, null, withPercentage(ONE)));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void should_fail_if_percentage_is_null() {
-        longs.assertIsCloseToPercentage(someInfo(), ONE, ZERO, null);
+      assertThatNullPointerException().isThrownBy(() ->  longs.assertIsCloseToPercentage(someInfo(), ONE, ZERO, null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void should_fail_if_percentage_is_negative() {
-        longs.assertIsCloseToPercentage(someInfo(), ONE, ZERO, withPercentage(-1L));
+      assertThatIllegalArgumentException().isThrownBy(() ->     longs.assertIsCloseToPercentage(someInfo(), ONE, ZERO, withPercentage(-1L)));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void should_fail_if_percentage_is_greater_than_one_hundred() {
-        longs.assertIsCloseToPercentage(someInfo(), ONE, ZERO, withPercentage(101L));
+    @ParameterizedTest
+    @CsvSource({
+      "1, 1, 1",
+      "1, 2, 100",
+      "-1, -1, 1",
+      "-1, -2, 100",
+      "-1, 1, 200"
+    })
+    public void should_pass_if_difference_is_less_than_given_percentage(Long actual, Long other, Long percentage) {
+      longs.assertIsCloseToPercentage(someInfo(), actual, other, withPercentage(percentage));
     }
 
-    @Test
-    public void should_pass_if_difference_is_less_than_given_percentage() {
-        longs.assertIsCloseToPercentage(someInfo(), ONE, ONE, withPercentage(1L));
-        longs.assertIsCloseToPercentage(someInfo(), ONE, TWO, withPercentage(100L));
-    }
-
-    @Test
-    public void should_pass_if_difference_is_equal_to_given_percentage() {
-        longs.assertIsCloseToPercentage(someInfo(), ONE, ONE, withPercentage(ZERO));
-        longs.assertIsCloseToPercentage(someInfo(), ONE, TWO, withPercentage(50L));
+    @ParameterizedTest
+    @CsvSource({
+      "1, 1, 0",
+      "2, 1, 100",
+      "1, 2, 50",
+      "-1, -1, 0",
+      "-2, -1, 100",
+      "-1, -2, 50"
+    })
+    public void should_pass_if_difference_is_equal_to_given_percentage(Long actual, Long other, Long percentage) {
+      longs.assertIsCloseToPercentage(someInfo(), actual, other, withPercentage(percentage));
     }
 
     @Test

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.error;
 
@@ -41,7 +41,7 @@ public class ShouldHaveContent extends AbstractShouldHaveTextContent {
   /**
    * Creates a new <code>{@link ShouldHaveContent}</code>.
    * @param actual the actual path in the failed assertion.
-   * @param charset the charset that was used to read the the path.
+   * @param charset the charset that was used to read the path.
    * @param diffs the differences between {@code actual} and the expected text that was provided in the assertion.
    * @return the created {@code ErrorMessageFactory}.
    */
@@ -50,12 +50,12 @@ public class ShouldHaveContent extends AbstractShouldHaveTextContent {
   }
 
   private ShouldHaveContent(File actual, Charset charset, String diffs) {
-    super("%nFile:%n  <%s>%nread with charset <%s> does not have the expected content:%n", actual, charset);
+    super("%nFile:%n  <%s>%nread with charset <%s> does not have the expected content:%n%n", actual, charset);
     this.diffs = diffs;
   }
   
   private ShouldHaveContent(Path actual, Charset charset, String diffs) {
-    super("%nPath:%n  <%s>%nread with charset <%s> does not have the expected content:%n", actual, charset);
+    super("%nPath:%n  <%s>%nread with charset <%s> does not have the expected content:%n%n", actual, charset);
     this.diffs = diffs;
   }
 }

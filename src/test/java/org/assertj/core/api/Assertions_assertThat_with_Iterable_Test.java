@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,14 +8,14 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
-import static org.assertj.core.util.Sets.newLinkedHashSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.util.Sets.newLinkedHashSet;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link Assertions#assertThat(Iterable)}</code>.
@@ -27,14 +27,13 @@ public class Assertions_assertThat_with_Iterable_Test {
 
   @Test
   public void should_create_Assert() {
-    AbstractIterableAssert<?, ? extends Iterable<?>, Object> assertions = Assertions.assertThat( newLinkedHashSet() );
-    assertThat(assertions).isNotNull();
+    AbstractIterableAssert<?, Iterable<? extends Object>, Object, ObjectAssert<Object>> assertThat = Assertions.assertThat(newLinkedHashSet());
+    assertThat(assertThat).isNotNull();
   }
 
   @Test
   public void should_pass_actual() {
     Iterable<String> names = newLinkedHashSet("Luke");
-    AbstractIterableAssert<?, ? extends Iterable<? extends String>, String> assertions = Assertions.assertThat( names );
-    assertThat(assertions.actual).isSameAs(names);
+    assertThat(Assertions.assertThat(names).actual).isSameAs(names);
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,21 +8,17 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
-import static org.assertj.core.test.ExpectedException.none;
-import static org.mockito.Mockito.spy;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.assertj.core.test.ExpectedException;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * Base class for {@link org.assertj.core.internal.Classes} unit tests
@@ -34,21 +30,20 @@ import org.junit.Rule;
  */
 public abstract class ClassesBaseTest {
 
-  @Rule
-  public ExpectedException thrown = none();
   protected Failures failures;
   protected Classes classes;
   protected Class<?> actual;
 
   @Target(ElementType.TYPE)
   @Retention(RetentionPolicy.RUNTIME)
-  protected static @interface MyAnnotation {
+  protected @interface MyAnnotation {
 
   }
 
   @MyAnnotation
   protected static class AnnotatedClass {
     public String publicField;
+    public String publicField2;
     protected String protectedField;
     @SuppressWarnings("unused")
     private String privateField;
@@ -62,11 +57,21 @@ public abstract class ClassesBaseTest {
 
   }
 
-  @Before
+  protected static class MethodsClass {
+    public void publicMethod() {}
+    protected void protectedMethod() {}
+    @SuppressWarnings("unused")
+    private void privateMethod() {}
+
+  }
+
+  @BeforeEach
   public void setUp() {
-    failures = spy(new Failures());
     classes = new Classes();
-    classes.failures = failures;
+  }
+
+  public class NoField {
+
   }
 
 }

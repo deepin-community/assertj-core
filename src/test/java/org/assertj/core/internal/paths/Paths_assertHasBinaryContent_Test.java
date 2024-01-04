@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,12 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.paths;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldBeReadable.shouldBeReadable;
 import static org.assertj.core.error.ShouldExist.shouldExist;
 import static org.assertj.core.error.ShouldHaveBinaryContent.shouldHaveBinaryContent;
@@ -27,16 +27,16 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 
 import org.assertj.core.api.AssertionInfo;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.assertj.core.internal.BinaryDiffResult;
 import org.assertj.core.internal.Paths;
 import org.assertj.core.internal.PathsBaseTest;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link Paths#assertHasBinaryContent(AssertionInfo, Path, byte[])}</code>.
@@ -47,14 +47,14 @@ public class Paths_assertHasBinaryContent_Test extends PathsBaseTest {
   private static byte[] expected;
   private Path mockPath;
 
-  @BeforeClass
+  @BeforeAll
   public static void setUpOnce() {
 	// Does not matter if the values binaryDiffer, the actual comparison is mocked in this test
 	path = new File("src/test/resources/actual_file.txt").toPath();
 	expected = new byte[] { 0, 1 };
   }
 
-  @Before
+  @BeforeEach
   public void init() {
 	mockPath = mock(Path.class);
   }
@@ -69,14 +69,14 @@ public class Paths_assertHasBinaryContent_Test extends PathsBaseTest {
 
   @Test
   public void should_throw_error_if_expected_is_null() {
-	thrown.expectNullPointerException("The binary content to compare to should not be null");
-	paths.assertHasBinaryContent(someInfo(), path, null);
+    assertThatNullPointerException().isThrownBy(() -> paths.assertHasBinaryContent(someInfo(), path, null))
+                                    .withMessage("The binary content to compare to should not be null");
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-	thrown.expectAssertionError(actualIsNull());
-	paths.assertHasBinaryContent(someInfo(), null, expected);
+	assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> paths.assertHasBinaryContent(someInfo(), null, expected))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
@@ -107,17 +107,15 @@ public class Paths_assertHasBinaryContent_Test extends PathsBaseTest {
   }
   
   @Test
-  public void should_throw_error_wrapping_catched_IOException() throws IOException {
+  public void should_throw_error_wrapping_caught_IOException() throws IOException {
 	IOException cause = new IOException();
 	when(binaryDiff.diff(path, expected)).thenThrow(cause);
 	when(nioFilesWrapper.exists(path)).thenReturn(true);
 	when(nioFilesWrapper.isReadable(path)).thenReturn(true);
-	try {
-	  paths.assertHasBinaryContent(someInfo(), path, expected);
-	  failBecauseExceptionWasNotThrown(RuntimeIOException.class);
-	} catch (RuntimeIOException e) {
-	  assertThat(e.getCause()).isSameAs(cause);
-	}
+
+    assertThatExceptionOfType(UncheckedIOException.class).isThrownBy(() -> paths.assertHasBinaryContent(someInfo(),
+                                                                                                        path, expected))
+                                                         .withCause(cause);
   }
 
   @Test

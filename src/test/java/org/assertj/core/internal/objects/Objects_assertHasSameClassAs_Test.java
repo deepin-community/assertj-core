@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,24 +8,24 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.objects;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldHaveSameClass.shouldHaveSameClass;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
-
-
 import static org.mockito.Mockito.verify;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.Objects;
 import org.assertj.core.internal.ObjectsBaseTest;
 import org.assertj.core.test.Person;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -38,7 +38,7 @@ public class Objects_assertHasSameClassAs_Test extends ObjectsBaseTest {
 
   private static Person actual;
 
-  @BeforeClass
+  @BeforeAll
   public static void setUpOnce() {
     actual = new Person("Yoda");
   }
@@ -50,14 +50,14 @@ public class Objects_assertHasSameClassAs_Test extends ObjectsBaseTest {
 
   @Test
   public void should_throw_error_if_type_is_null() {
-    thrown.expectNullPointerException("The given object should not be null");
-    objects.assertHasSameClassAs(someInfo(), actual, null);
+    assertThatNullPointerException().isThrownBy(() -> objects.assertHasSameClassAs(someInfo(), actual, null))
+                                    .withMessage("The given object should not be null");
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    objects.assertHasSameClassAs(someInfo(), null, new Person("Luke"));
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> objects.assertHasSameClassAs(someInfo(), null, new Person("Luke")))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test

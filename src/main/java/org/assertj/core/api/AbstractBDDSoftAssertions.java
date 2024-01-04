@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,203 +8,38 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
-import static org.assertj.core.api.Assertions.catchThrowable;
-
-import java.io.File;
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.net.URI;
 import java.nio.file.Path;
-import java.util.Date;
-import java.util.Iterator;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
+import java.util.Spliterator;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.DoublePredicate;
+import java.util.function.IntPredicate;
+import java.util.function.LongPredicate;
+import java.util.function.Predicate;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
-import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
+import org.assertj.core.util.CheckReturnValue;
 
-public abstract class AbstractBDDSoftAssertions extends AbstractSoftAssertions {
-
-  // then* methods duplicated from BDDAssertions
-  
-  /**
-   * Creates a new instance of <code>{@link BigDecimalAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public BigDecimalAssert then(BigDecimal actual) {
-	return proxy(BigDecimalAssert.class, BigDecimal.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link BooleanAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public BooleanAssert then(boolean actual) {
-	return proxy(BooleanAssert.class, Boolean.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link BooleanAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public BooleanAssert then(Boolean actual) {
-	return proxy(BooleanAssert.class, Boolean.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link BooleanArrayAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public BooleanArrayAssert then(boolean[] actual) {
-	return proxy(BooleanArrayAssert.class, boolean[].class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link ByteAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public ByteAssert then(byte actual) {
-	return proxy(ByteAssert.class, Byte.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link ByteAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public ByteAssert then(Byte actual) {
-	return proxy(ByteAssert.class, Byte.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link ByteArrayAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public ByteArrayAssert then(byte[] actual) {
-	return proxy(ByteArrayAssert.class, byte[].class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link CharacterAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public CharacterAssert then(char actual) {
-	return proxy(CharacterAssert.class, Character.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link CharArrayAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public CharArrayAssert then(char[] actual) {
-	return proxy(CharArrayAssert.class, char[].class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link CharacterAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public CharacterAssert then(Character actual) {
-	return proxy(CharacterAssert.class, Character.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link ClassAssert}</code>
-   * </p> 
-   * We don't return {@link ClassAssert} as it has overridden methods to annotated with {@link SafeVarargs}.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public SoftAssertionClassAssert then(Class<?> actual) {
-	return proxy(SoftAssertionClassAssert.class, Class.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link IterableAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  @SuppressWarnings("unchecked")
-  public <T> IterableAssert<T> then(Iterable<? extends T> actual) {
-	return proxy(IterableAssert.class, Iterable.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link IterableAssert}</code>. The <code>{@link Iterator}</code> is first
-   * converted
-   * into an <code>{@link Iterable}</code>
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  @SuppressWarnings("unchecked")
-  public <T> IterableAssert<T> then(Iterator<T> actual) {
-	return proxy(IterableAssert.class, Iterator.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link DoubleAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public DoubleAssert then(double actual) {
-	return proxy(DoubleAssert.class, Double.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link DoubleAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public DoubleAssert then(Double actual) {
-	return proxy(DoubleAssert.class, Double.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link DoubleArrayAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public DoubleArrayAssert then(double[] actual) {
-	return proxy(DoubleArrayAssert.class, double[].class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link FileAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public FileAssert then(File actual) {
-	return proxy(FileAssert.class, File.class, actual);
-  }
+public abstract class AbstractBDDSoftAssertions extends Java6AbstractBDDSoftAssertions {
 
   /**
    * Creates a new, proxied instance of a {@link PathAssert}
@@ -212,264 +47,287 @@ public abstract class AbstractBDDSoftAssertions extends AbstractSoftAssertions {
    * @param actual the path
    * @return the created assertion object
    */
+  @CheckReturnValue
   public PathAssert then(Path actual) {
     return proxy(PathAssert.class, Path.class, actual);
   }
 
   /**
-   * Creates a new instance of <code>{@link InputStreamAssert}</code>.
+   * Create assertion for {@link java.util.Optional}.
+   *
+   * @param actual the actual value.
+   * @param <VALUE> the type of the value contained in the {@link java.util.Optional}.
+   *
+   * @return the created assertion object.
+   */
+  @CheckReturnValue
+  public <VALUE> OptionalAssert<VALUE> then(Optional<VALUE> actual) {
+    return proxy(OptionalAssert.class, Optional.class, actual);
+  }
+
+  /**
+   * Create assertion for {@link java.util.OptionalDouble}.
+   *
+   * @param actual the actual value.
+   *
+   * @return the created assertion object.
+   */
+  @CheckReturnValue
+  public OptionalDoubleAssert then(OptionalDouble actual) {
+    return proxy(OptionalDoubleAssert.class, OptionalDouble.class, actual);
+  }
+
+  /**
+   * Create assertion for {@link java.util.OptionalInt}.
+   *
+   * @param actual the actual value.
+   *
+   * @return the created assertion object.
+   */
+  @CheckReturnValue
+  public OptionalIntAssert then(OptionalInt actual) {
+    return proxy(OptionalIntAssert.class, OptionalInt.class, actual);
+  }
+
+  /**
+   * Create assertion for {@link java.util.OptionalLong}.
+   *
+   * @param actual the actual value.
+   *
+   * @return the created assertion object.
+   */
+  @CheckReturnValue
+  public OptionalLongAssert then(OptionalLong actual) {
+    return proxy(OptionalLongAssert.class, OptionalLong.class, actual);
+  }
+
+  /**
+  * Creates a new instance of <code>{@link LocalDateAssert}</code>.
+  *
+  * @param actual the actual value.
+  * @return the created assertion object.
+  */
+  @CheckReturnValue
+  public LocalDateAssert then(LocalDate actual) {
+    return proxy(LocalDateAssert.class, LocalDate.class, actual);
+  }
+
+  /**
+   * Creates a new instance of <code>{@link LocalDateTimeAssert}</code>.
    *
    * @param actual the actual value.
    * @return the created assertion object.
    */
-  public InputStreamAssert then(InputStream actual) {
-	return proxy(InputStreamAssert.class, InputStream.class, actual);
+  @CheckReturnValue
+  public LocalDateTimeAssert then(LocalDateTime actual) {
+    return proxy(LocalDateTimeAssert.class, LocalDateTime.class, actual);
   }
 
   /**
-   * Creates a new instance of <code>{@link FloatAssert}</code>.
+   * Creates a new instance of <code>{@link ZonedDateTimeAssert}</code>.
    *
    * @param actual the actual value.
    * @return the created assertion object.
    */
-  public FloatAssert then(float actual) {
-	return proxy(FloatAssert.class, Float.class, actual);
+  @CheckReturnValue
+  public ZonedDateTimeAssert then(ZonedDateTime actual) {
+    return proxy(ZonedDateTimeAssert.class, ZonedDateTime.class, actual);
   }
 
   /**
-   * Creates a new instance of <code>{@link FloatAssert}</code>.
+   * Creates a new instance of <code>{@link LocalTimeAssert}</code>.
    *
    * @param actual the actual value.
    * @return the created assertion object.
    */
-  public FloatAssert then(Float actual) {
-	return proxy(FloatAssert.class, Float.class, actual);
+  @CheckReturnValue
+  public LocalTimeAssert then(LocalTime actual) {
+    return proxy(LocalTimeAssert.class, LocalTime.class, actual);
   }
 
   /**
-   * Creates a new instance of <code>{@link FloatArrayAssert}</code>.
+   * Creates a new instance of <code>{@link OffsetTimeAssert}</code>.
    *
    * @param actual the actual value.
    * @return the created assertion object.
    */
-  public FloatArrayAssert then(float[] actual) {
-	return proxy(FloatArrayAssert.class, float[].class, actual);
+  @CheckReturnValue
+  public OffsetTimeAssert then(OffsetTime actual) {
+    return proxy(OffsetTimeAssert.class, OffsetTime.class, actual);
   }
 
   /**
-   * Creates a new instance of <code>{@link IntegerAssert}</code>.
+   * Creates a new instance of <code>{@link OffsetDateTimeAssert}</code>.
    *
    * @param actual the actual value.
    * @return the created assertion object.
    */
-  public IntegerAssert then(int actual) {
-	return proxy(IntegerAssert.class, Integer.class, actual);
+  @CheckReturnValue
+  public OffsetDateTimeAssert then(OffsetDateTime actual) {
+    return proxy(OffsetDateTimeAssert.class, OffsetDateTime.class, actual);
   }
 
   /**
-   * Creates a new instance of <code>{@link IntArrayAssert}</code>.
+   * Creates a new instance of <code>{@link InstantAssert}</code>.
    *
    * @param actual the actual value.
    * @return the created assertion object.
+   * @since 3.7.0
    */
-  public IntArrayAssert then(int[] actual) {
-	return proxy(IntArrayAssert.class, int[].class, actual);
+  @CheckReturnValue
+  public InstantAssert then(Instant actual) {
+    return proxy(InstantAssert.class, Instant.class, actual);
   }
 
   /**
-   * Creates a new instance of <code>{@link IntegerAssert}</code>.
+   * Create assertion for {@link java.util.concurrent.CompletableFuture}.
    *
    * @param actual the actual value.
+   * @param <RESULT> the type of the value contained in the {@link java.util.concurrent.CompletableFuture}.
+   *
    * @return the created assertion object.
    */
-  public IntegerAssert then(Integer actual) {
-	return proxy(IntegerAssert.class, Integer.class, actual);
+  @CheckReturnValue
+  public <RESULT> CompletableFutureAssert<RESULT> then(CompletableFuture<RESULT> actual) {
+    return proxy(CompletableFutureAssert.class, CompletableFuture.class, actual);
   }
 
   /**
-   * Creates a new instance of <code>{@link ListAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  @SuppressWarnings("unchecked")
-  public <T> ListAssert<T> then(List<? extends T> actual) {
-	return proxy(ListAssert.class, List.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link LongAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public LongAssert then(long actual) {
-	return proxy(LongAssert.class, Long.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link LongAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public LongAssert then(Long actual) {
-	return proxy(LongAssert.class, Long.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link LongArrayAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public LongArrayAssert then(long[] actual) {
-	return proxy(LongArrayAssert.class, long[].class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link ObjectAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  @SuppressWarnings("unchecked")
-  public <T> ObjectAssert<T> then(T actual) {
-	return proxy(ObjectAssert.class, Object.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link ObjectArrayAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  @SuppressWarnings("unchecked")
-  public <T> ObjectArrayAssert<T> then(T[] actual) {
-	return proxy(ObjectArrayAssert.class, Object[].class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link MapAssert}</code>.
-   * </p> 
-   * We don't return {@link MapAssert} as it has overridden methods to annotated with {@link SafeVarargs}.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  @SuppressWarnings("unchecked")
-  public <K, V> SoftAssertionMapAssert<K, V> then(Map<K, V> actual) {
-	return proxy(SoftAssertionMapAssert.class, Map.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link ShortAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public ShortAssert then(short actual) {
-	return proxy(ShortAssert.class, Short.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link ShortAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public ShortAssert then(Short actual) {
-	return proxy(ShortAssert.class, Short.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link ShortArrayAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public ShortArrayAssert then(short[] actual) {
-	return proxy(ShortArrayAssert.class, short[].class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link CharSequenceAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public CharSequenceAssert then(CharSequence actual) {
-	return proxy(CharSequenceAssert.class, CharSequence.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link StringAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public StringAssert then(String actual) {
-	return proxy(StringAssert.class, String.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link DateAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion object.
-   */
-  public DateAssert then(Date actual) {
-	return proxy(DateAssert.class, Date.class, actual);
-  }
-
-  /**
-   * Creates a new instance of <code>{@link ThrowableAssert}</code>.
-   *
-   * @param actual the actual value.
-   * @return the created assertion Throwable.
-   */
-  public ThrowableAssert then(Throwable actual) {
-	return proxy(ThrowableAssert.class, Throwable.class, actual);
-  }
-
-  /**
-   * Allows to capture and then assert on a {@link Throwable} more easily when used with Java 8 lambdas.
-   * 
+   * Create assertion for {@link java.util.concurrent.CompletionStage} by converting it to a {@link CompletableFuture} and returning a {@link CompletableFutureAssert}.
    * <p>
-   * Java 8 example :
-   * <pre><code class='java'> {@literal @}Test
-   *  public void testException() {
-   *    BDDSoftAssertions softly = new BDDSoftAssertions();
-   *    softly.thenThrownBy(() -> { throw new Exception("boom!") }).isInstanceOf(Exception.class)
-   *                                                               .hasMessageContaining("boom");
-   *  }</code></pre>
-   * 
-   * Java 7 example :
-   * <pre><code class='java'> BDDSoftAssertions softly = new BDDSoftAssertions();
-   * softly.thenThrownBy(new ThrowingCallable() {
-   * 
-   *   {@literal @}Override
-   *   public Void call() throws Exception {
-   *     throw new Exception("boom!");
-   *   }
-   *   
-   * }).isInstanceOf(Exception.class)
-   *   .hasMessageContaining("boom");</code></pre>
+   * If the given {@link java.util.concurrent.CompletionStage} is null, the {@link CompletableFuture} in the returned {@link CompletableFutureAssert} will also be null.
    *
-   * @param shouldRaiseThrowable The {@link ThrowingCallable} or lambda with the code that should raise the throwable.
-   * @return The captured exception or <code>null</code> if none was raised by the callable.
+   * @param actual the actual value.
+   * @param <RESULT> the type of the value contained in the {@link java.util.concurrent.CompletionStage}.
+   *
+   * @return the created assertion object.
    */
-  public AbstractThrowableAssert<?, ? extends Throwable> thenThrownBy(ThrowingCallable shouldRaiseThrowable) {
-    return then(catchThrowable(shouldRaiseThrowable)).hasBeenThrown();
+  @CheckReturnValue
+  public <RESULT> CompletableFutureAssert<RESULT> then(CompletionStage<RESULT> actual) {
+    return proxy(CompletableFutureAssert.class, CompletionStage.class, actual);
   }
-  
+
   /**
-   * Creates a new instance of <code>{@link UriAssert}</code>.
+   * Create assertion for {@link Predicate}.
+   *
+   * @param actual the actual value.
+   * @param <T> the type of the value contained in the {@link Predicate}.
+   *
+   * @return the created assertion object.
+   *
+   * @since 3.5.0
+   */
+  @CheckReturnValue
+  public <T> ProxyablePredicateAssert<T> then(Predicate<T> actual) {
+    return proxy(ProxyablePredicateAssert.class, Predicate.class, actual);
+  }
+
+  /**
+   * Create assertion for {@link IntPredicate}.
    *
    * @param actual the actual value.
    * @return the created assertion object.
+   * @since 3.5.0
    */
-  public UriAssert then(URI actual) {
-    return proxy(UriAssert.class, URI.class, actual);
+  @CheckReturnValue
+  public IntPredicateAssert then(IntPredicate actual) {
+    return proxy(IntPredicateAssert.class, IntPredicate.class, actual);
+  }
+
+  /**
+   * Create assertion for {@link DoublePredicate}.
+   *
+   * @param actual the actual value.
+   * @return the created assertion object.
+   * @since 3.5.0
+   */
+  @CheckReturnValue
+  public DoublePredicateAssert then(DoublePredicate actual) {
+    return proxy(DoublePredicateAssert.class, DoublePredicate.class, actual);
+  }
+
+  /**
+   * Create assertion for {@link DoublePredicate}.
+   *
+   * @param actual the actual value.
+   * @return the created assertion object.
+   * @since 3.5.0
+   */
+  @CheckReturnValue
+  public LongPredicateAssert then(LongPredicate actual) {
+    return proxy(LongPredicateAssert.class, LongPredicate.class, actual);
+  }
+
+  /**
+   * Creates a new instance of <code>{@link ListAssert}</code> from the given {@link Stream}.
+   * <p>
+   * <b>Be aware that to create the returned {@link ListAssert} the given the {@link Stream} is consumed so it won't be
+   * possible to use it again.</b> Calling multiple methods on the returned {@link ListAssert} is safe as it only
+   * interacts with the {@link List} built from the {@link Stream}.
+   *
+   * @param <ELEMENT> the type of elements.
+   * @param actual the actual {@link Stream} value.
+   * @return the created assertion object.
+   */
+  @CheckReturnValue
+  public <ELEMENT> AbstractListAssert<?, List<? extends ELEMENT>, ELEMENT, ObjectAssert<ELEMENT>> then(Stream<? extends ELEMENT> actual) {
+    return proxy(ProxyableListAssert.class, Stream.class, actual);
+  }
+
+  /**
+   * Creates a new instance of <code>{@link ListAssert}</code> from the given {@link DoubleStream}.
+   * <p>
+   * <b>Be aware that to create the returned {@link ListAssert} the given the {@link DoubleStream} is consumed so it won't be
+   * possible to use it again.</b> Calling multiple methods on the returned {@link ListAssert} is safe as it only
+   * interacts with the {@link List} built from the {@link DoubleStream}.
+   *
+   * @param actual the actual {@link DoubleStream} value.
+   * @return the created assertion object.
+   */
+  @CheckReturnValue
+  public AbstractListAssert<?, List<? extends Double>, Double, ObjectAssert<Double>> then(DoubleStream actual) {
+    return proxy(ProxyableListAssert.class, DoubleStream.class, actual);
+  }
+
+  /**
+   * Creates a new instance of <code>{@link ListAssert}</code> from the given {@link LongStream}.
+   * <p>
+   * <b>Be aware that to create the returned {@link ListAssert} the given the {@link LongStream} is consumed so it won't be
+   * possible to use it again.</b> Calling multiple methods on the returned {@link ListAssert} is safe as it only
+   * interacts with the {@link List} built from the {@link LongStream}.
+   *
+   * @param actual the actual {@link LongStream} value.
+   * @return the created assertion object.
+   */
+  @CheckReturnValue
+  public AbstractListAssert<?, List<? extends Long>, Long, ObjectAssert<Long>> then(LongStream actual) {
+    return proxy(ProxyableListAssert.class, LongStream.class, actual);
+  }
+
+  /**
+   * Creates a new instance of <code>{@link ListAssert}</code> from the given {@link IntStream}.
+   * <p>
+   * <b>Be aware that to create the returned {@link ListAssert} the given the {@link IntStream} is consumed so it won't be
+   * possible to use it again.</b> Calling multiple methods on the returned {@link ListAssert} is safe as it only
+   * interacts with the {@link List} built from the {@link IntStream}.
+   *
+   * @param actual the actual {@link IntStream} value.
+   * @return the created assertion object.
+   */
+  @CheckReturnValue
+  public AbstractListAssert<?, List<? extends Integer>, Integer, ObjectAssert<Integer>> then(IntStream actual) {
+    return proxy(ProxyableListAssert.class, IntStream.class, actual);
+  }
+
+  /**
+   * Creates a new instance of <code>{@link SpliteratorAssert}</code> from the given {@link Spliterator}.
+   *
+   * @param <ELEMENT> the type of elements.
+   * @param actual the actual {@link Spliterator} value.
+   * @return the created assertion object.
+   */
+  @CheckReturnValue
+  public <ELEMENT> SpliteratorAssert<ELEMENT> then(Spliterator<ELEMENT> actual) {
+    return proxy(SpliteratorAssert.class, Spliterator.class, actual);
   }
 }

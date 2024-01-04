@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
@@ -37,21 +37,9 @@ public class BinaryDiff {
 
   @VisibleForTesting
   public BinaryDiffResult diff(Path actual, byte[] expected) throws IOException {
-    InputStream expectedStream = new ByteArrayInputStream(expected);
-    InputStream actualStream = null;
-    boolean threw = true;
-    try {
-      actualStream = Files.newInputStream(actual);
-      BinaryDiffResult result = diff(actualStream, expectedStream);
-      threw = false;
-      return result;
-    } finally {
-      try {
-        if (actualStream != null) actualStream.close();
-      } catch (IOException e) {
-        // Only rethrow if it doesn't shadow an exception thrown from the inner try block
-        if (!threw) throw e;
-      }
+    try (InputStream expectedStream = new ByteArrayInputStream(expected);
+        InputStream actualStream = Files.newInputStream(actual)) {
+      return diff(actualStream, expectedStream);
     }
   }
 

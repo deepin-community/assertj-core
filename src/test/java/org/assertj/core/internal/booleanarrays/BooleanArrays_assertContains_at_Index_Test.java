@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,13 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.booleanarrays;
 
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.data.Index.atIndex;
 import static org.assertj.core.error.ShouldContainAtIndex.shouldContainAtIndex;
 import static org.assertj.core.test.BooleanArrays.emptyArray;
@@ -28,7 +31,7 @@ import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.data.Index;
 import org.assertj.core.internal.BooleanArrays;
 import org.assertj.core.internal.BooleanArraysBaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -41,26 +44,28 @@ public class BooleanArrays_assertContains_at_Index_Test extends BooleanArraysBas
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    arrays.assertContains(someInfo(), null, true, someIndex());
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arrays.assertContains(someInfo(), null, true, someIndex()))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
   public void should_fail_if_actual_is_empty() {
-    thrown.expectAssertionError(actualIsEmpty());
-    arrays.assertContains(someInfo(), emptyArray(), true, someIndex());
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arrays.assertContains(someInfo(), emptyArray(), true, someIndex()))
+                                                   .withMessage(actualIsEmpty());
   }
 
   @Test
   public void should_throw_error_if_Index_is_null() {
-    thrown.expectNullPointerException("Index should not be null");
-    arrays.assertContains(someInfo(), actual, true, null);
+    assertThatNullPointerException().isThrownBy(() -> arrays.assertContains(someInfo(), actual, true, null))
+                                    .withMessage("Index should not be null");
   }
 
   @Test
   public void should_throw_error_if_Index_is_out_of_bounds() {
-    thrown.expectIndexOutOfBoundsException("Index should be between <0> and <1> (inclusive,) but was:%n <6>");
-    arrays.assertContains(someInfo(), actual, true, atIndex(6));
+    assertThatExceptionOfType(IndexOutOfBoundsException.class).isThrownBy(() -> arrays.assertContains(someInfo(),
+                                                                                                      actual, true,
+                                                                                                      atIndex(6)))
+                                                              .withMessageContaining(format("Index should be between <0> and <1> (inclusive) but was:%n <6>"));
   }
 
   @Test

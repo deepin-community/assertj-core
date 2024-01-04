@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.maps;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.assertj.core.error.ShouldContainValues.shouldContainValues;
 import static org.assertj.core.test.Maps.mapOf;
@@ -25,8 +27,8 @@ import java.util.HashMap;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.MapsBaseTest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link org.assertj.core.internal.Maps#assertContainsValue(org.assertj.core.api.AssertionInfo, java.util.Map, Object)}</code>.
@@ -38,7 +40,7 @@ import org.junit.Test;
 public class Maps_assertContainsValues_Test extends MapsBaseTest {
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() {
     super.setUp();
     actual = mapOf(entry("name", "Yoda"), entry("type", "Jedi"), entry("color", "green"), entry((String) null, (String) null));
@@ -51,14 +53,14 @@ public class Maps_assertContainsValues_Test extends MapsBaseTest {
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    maps.assertContainsValues(someInfo(), null, "Yoda");
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> maps.assertContainsValues(someInfo(), null, "Yoda"))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
   public void should_fail_if_value_is_null() {
-    thrown.expectNullPointerException("The array of values to look for should not be null");
-    maps.assertContainsValues(someInfo(), actual, (String[])null);
+    assertThatNullPointerException().isThrownBy(() -> maps.assertContainsValues(someInfo(), actual, (String[]) null))
+                                    .withMessage("The array of values to look for should not be null");
   }
 
   @Test

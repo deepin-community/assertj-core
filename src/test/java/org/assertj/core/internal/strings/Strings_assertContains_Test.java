@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,25 +8,23 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.strings;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldContainCharSequence.shouldContain;
-import static org.assertj.core.test.ErrorMessages.charSequenceToLookForIsNull;
+import static org.assertj.core.internal.ErrorMessages.charSequenceToLookForIsNull;
 import static org.assertj.core.test.TestData.someInfo;
-import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
 import static org.assertj.core.util.Arrays.array;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
 import static org.assertj.core.util.Sets.newLinkedHashSet;
 
-import static org.mockito.Mockito.verify;
-
-import org.junit.Test;
-
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.Strings;
 import org.assertj.core.internal.StringsBaseTest;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link Strings#assertContains(AssertionInfo, CharSequence, CharSequence)}</code>.
@@ -38,38 +36,26 @@ public class Strings_assertContains_Test extends StringsBaseTest {
 
   @Test
   public void should_fail_if_actual_does_not_contain_sequence() {
-    AssertionInfo info = someInfo();
-    try {
-      strings.assertContains(info, "Yoda", "Luke");
-    } catch (AssertionError e) {
-      verify(failures).failure(info, shouldContain("Yoda", "Luke"));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> strings.assertContains(someInfo(), "Yoda", "Luke"))
+                                                   .withMessage(shouldContain("Yoda", "Luke").create());
   }
 
   @Test
   public void should_fail_if_actual_contains_sequence_but_in_different_case() {
-    AssertionInfo info = someInfo();
-    try {
-      strings.assertContains(info, "Yoda", "yo");
-    } catch (AssertionError e) {
-      verify(failures).failure(info, shouldContain("Yoda", "yo"));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> strings.assertContains(someInfo(), "Yoda", "yo"))
+                                                   .withMessage(shouldContain("Yoda", "yo").create());
   }
 
   @Test
   public void should_throw_error_if_sequence_is_null() {
-    thrown.expectNullPointerException(charSequenceToLookForIsNull());
-    strings.assertContains(someInfo(), "Yoda", (String) null);
+    assertThatNullPointerException().isThrownBy(() -> strings.assertContains(someInfo(), "Yoda", (String) null))
+                                                 .withMessage(charSequenceToLookForIsNull());
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    strings.assertContains(someInfo(), null, "Yoda");
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> strings.assertContains(someInfo(), null, "Yoda"))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
@@ -79,14 +65,8 @@ public class Strings_assertContains_Test extends StringsBaseTest {
 
   @Test
   public void should_fail_if_actual_does_not_contain_all_given_strings() {
-    AssertionInfo info = someInfo();
-    try {
-      strings.assertContains(info, "Yoda", "Yo", "da", "Han");
-    } catch (AssertionError e) {
-      verify(failures).failure(info, shouldContain("Yoda", array("Yo", "da", "Han"), newLinkedHashSet("Han")));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> strings.assertContains(someInfo(), "Yoda", "Yo", "da", "Han"))
+                                                   .withMessage(shouldContain("Yoda", array("Yo", "da", "Han"), newLinkedHashSet("Han")).create());
   }
 
   @Test
@@ -108,26 +88,14 @@ public class Strings_assertContains_Test extends StringsBaseTest {
 
   @Test
   public void should_fail_if_actual_does_not_contain_sequence_according_to_custom_comparison_strategy() {
-    AssertionInfo info = someInfo();
-    try {
-      stringsWithCaseInsensitiveComparisonStrategy.assertContains(info, "Yoda", "Luke");
-    } catch (AssertionError e) {
-      verify(failures).failure(info, shouldContain("Yoda", "Luke", comparisonStrategy));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> stringsWithCaseInsensitiveComparisonStrategy.assertContains(someInfo(), "Yoda", "Luke"))
+                                                   .withMessage(shouldContain("Yoda", "Luke", comparisonStrategy).create());
   }
 
   @Test
   public void should_fail_if_actual_does_not_contain_all_given_strings_according_to_custom_comparison_strategy() {
-    AssertionInfo info = someInfo();
-    try {
-      stringsWithCaseInsensitiveComparisonStrategy.assertContains(info, "Yoda", "Yo", "da", "Han");
-    } catch (AssertionError e) {
-      verify(failures).failure(info, shouldContain("Yoda", array("Yo", "da", "Han"), newLinkedHashSet("Han"), comparisonStrategy));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> stringsWithCaseInsensitiveComparisonStrategy.assertContains(someInfo(), "Yoda", "Yo", "da", "Han"))
+                                                   .withMessage(shouldContain("Yoda", array("Yo", "da", "Han"), newLinkedHashSet("Han"), comparisonStrategy).create());
   }
 
 }

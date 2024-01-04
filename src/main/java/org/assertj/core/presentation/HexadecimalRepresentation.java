@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.presentation;
 
@@ -19,7 +19,7 @@ import static org.assertj.core.util.Strings.concat;
  * 
  * @author Mariusz Smykula
  */
-public class HexadecimalRepresentation implements Representation {
+public class HexadecimalRepresentation extends StandardRepresentation {
 
   public static final HexadecimalRepresentation HEXA_REPRESENTATION = new HexadecimalRepresentation();
 
@@ -35,13 +35,15 @@ public class HexadecimalRepresentation implements Representation {
    */
   @Override
   public String toStringOf(Object object) {
+    if (hasCustomFormatterFor(object)) return customFormat(object);
     if (object instanceof Number) return toStringOf((Number) object);
     else if (object instanceof String) return toStringOf(this, (String) object);
     else if (object instanceof Character) return toStringOf((Character) object);
-    else return DefaultToString.toStringOf(this, object);
+    return super.toStringOf(object);
   }
 
-  private static String toStringOf(Number number) {
+  @Override
+  protected String toStringOf(Number number) {
     if (number instanceof Byte) return toStringOf((Byte) number);
     else if (number instanceof Short) return toStringOf((Short) number);
     else if (number instanceof Integer) return toStringOf((Integer) number);
@@ -51,35 +53,38 @@ public class HexadecimalRepresentation implements Representation {
     else return number.toString();
   }
 
-  private static String toStringOf(Byte b) {
+  protected String toStringOf(Byte b) {
     return toGroupedHex(b, 8);
   }
 
-  private static String toStringOf(Short s) {
+  protected String toStringOf(Short s) {
     return toGroupedHex(s, 16);
   }
 
-  private static String toStringOf(Integer i) {
+  protected String toStringOf(Integer i) {
     return toGroupedHex(i, 32);
   }
 
-  private static String toStringOf(Long l) {
+  @Override
+  protected String toStringOf(Long l) {
     return toGroupedHex(l, 64);
   }
 
-  private static String toStringOf(Float f) {
+  @Override
+  protected String toStringOf(Float f) {
     return toGroupedHex(Float.floatToIntBits(f), 32);
   }
 
-  private static String toStringOf(Double d) {
+  protected String toStringOf(Double d) {
     return toGroupedHex(Double.doubleToRawLongBits(d), 64);
   }
 
-  private static String toStringOf(Character character) {
+  @Override
+  protected String toStringOf(Character character) {
     return concat("'", toStringOf((short) (int) character), "'");
   }
 
-  private static String toStringOf(Representation representation, String s) {
+  protected String toStringOf(Representation representation, String s) {
     return concat("\"", representation.toStringOf(s.toCharArray()), "\"");
   }
 
@@ -90,5 +95,4 @@ public class HexadecimalRepresentation implements Representation {
   private static String toHex(Number value, int sizeInBits) {
     return String.format("%0" + sizeInBits / NIBBLE_SIZE + "X", value);
   }
-
 }

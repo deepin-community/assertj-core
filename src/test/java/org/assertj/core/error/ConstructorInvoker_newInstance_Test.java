@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,14 +8,14 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.error;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.assertj.core.error.ConstructorInvoker;
-import org.junit.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link ConstructorInvoker#newInstance(String, Class[], Object[])}</code>.
@@ -26,7 +26,7 @@ public class ConstructorInvoker_newInstance_Test {
 
   private ConstructorInvoker invoker;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     invoker = new ConstructorInvoker();
   }
@@ -34,8 +34,7 @@ public class ConstructorInvoker_newInstance_Test {
   @Test
   public void should_create_Object_using_reflection() throws Exception {
     Object o = invoker.newInstance("java.lang.Exception", new Class<?>[] { String.class }, new Object[] { "Hi" });
-    assertThat(o instanceof Exception).isTrue();
-    Exception e = (Exception) o;
-    assertThat(e.getMessage()).isEqualTo("Hi");
+    assertThat(o).isInstanceOf(Exception.class);
+    assertThat((Exception) o).hasMessage("Hi");
   }
 }

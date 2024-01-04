@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.comparables;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.error.ShouldNotBeEqual.shouldNotBeEqual;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
@@ -27,7 +28,7 @@ import org.assertj.core.internal.Comparables;
 import org.assertj.core.internal.ComparablesBaseTest;
 import org.assertj.core.test.Person;
 import org.assertj.core.test.PersonCaseInsensitiveNameComparator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -45,8 +46,8 @@ public class Comparables_assertNotEqualByComparison_Test extends ComparablesBase
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    comparables.assertNotEqualByComparison(someInfo(), null, 8);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> comparables.assertNotEqualByComparison(someInfo(), null, 8))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
@@ -75,8 +76,8 @@ public class Comparables_assertNotEqualByComparison_Test extends ComparablesBase
 
   @Test
   public void should_fail_if_actual_is_null_whatever_custom_comparison_strategy_is() {
-    thrown.expectAssertionError(actualIsNull());
-    comparablesWithCustomComparisonStrategy.assertNotEqualByComparison(someInfo(), null, new Person("Yoda"));
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> comparablesWithCustomComparisonStrategy.assertNotEqualByComparison(someInfo(), null, new Person("Yoda")))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.urls;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.error.uri.ShouldHaveScheme.shouldHaveScheme;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
@@ -19,30 +20,29 @@ import static org.assertj.core.util.FailureMessages.actualIsNull;
 import static org.mockito.Mockito.verify;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.UrisBaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class Uris_assertHasScheme_Test extends UrisBaseTest {
 
   @Test
-  public void should_pass_if_actual_uri_has_the_given_scheme() throws URISyntaxException {
-    uris.assertHasScheme(info, new URI("http://example.com/pages/"), "http");
-    uris.assertHasScheme(info, new URI("example.com/pages/"), null);
+  public void should_pass_if_actual_uri_has_the_given_scheme() {
+    uris.assertHasScheme(info, URI.create("http://example.com/pages/"), "http");
+    uris.assertHasScheme(info, URI.create("example.com/pages/"), null);
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    uris.assertHasScheme(info, null, "http");
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> uris.assertHasScheme(info, null, "http"))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
-  public void should_fail_if_actual_scheme_is_not_the_expected_scheme() throws URISyntaxException {
+  public void should_fail_if_actual_scheme_is_not_the_expected_scheme() {
     AssertionInfo info = someInfo();
-    URI uri = new URI("http://example.com/pages/");
+    URI uri = URI.create("http://example.com/pages/");
     String expectedScheme = "ftp";
     try {
       uris.assertHasScheme(info, uri, expectedScheme);

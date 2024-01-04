@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.presentation;
 
@@ -19,8 +19,10 @@ import static org.assertj.core.util.Strings.concat;
  * 
  * @author Mariusz Smykula
  */
-public class BinaryRepresentation implements Representation {
+public class BinaryRepresentation extends StandardRepresentation {
 
+  public static final BinaryRepresentation BINARY_REPRESENTATION = new BinaryRepresentation();
+  
   public static final String BYTE_PREFIX = "0b";
 
   /**
@@ -32,17 +34,19 @@ public class BinaryRepresentation implements Representation {
    */
   @Override
   public String toStringOf(Object object) {
+    if (hasCustomFormatterFor(object)) return customFormat(object);
     if (object instanceof Character) return toStringOf((Character) object);
     if (object instanceof Number) return toStringOf((Number) object);
     if (object instanceof String) return toStringOf(this, (String) object);
-    return DefaultToString.toStringOf(this, object);
+    return super.toStringOf(object);
   }
 
-  private static String toStringOf(Representation representation, String s) {
+  protected String toStringOf(Representation representation, String s) {
     return concat("\"", representation.toStringOf(s.toCharArray()), "\"");
   }
 
-  private static String toStringOf(Number number) {
+  @Override
+  protected String toStringOf(Number number) {
     if (number instanceof Byte) return toStringOf((Byte) number);
     if (number instanceof Short) return toStringOf((Short) number);
     if (number instanceof Integer) return toStringOf((Integer) number);
@@ -52,31 +56,34 @@ public class BinaryRepresentation implements Representation {
     return number == null ? null : number.toString();
   }
 
-  private static String toStringOf(Byte b) {
+  protected String toStringOf(Byte b) {
     return toGroupedBinary(Integer.toBinaryString(b & 0xFF), 8);
   }
 
-  private static String toStringOf(Short s) {
+  protected String toStringOf(Short s) {
     return toGroupedBinary(Integer.toBinaryString(s & 0xFFFF), 16);
   }
 
-  private static String toStringOf(Integer i) {
+  protected String toStringOf(Integer i) {
     return toGroupedBinary(Integer.toBinaryString(i), 32);
   }
 
-  private static String toStringOf(Long l) {
+  @Override
+  protected String toStringOf(Long l) {
     return toGroupedBinary(Long.toBinaryString(l), 64);
   }
 
-  private static String toStringOf(Float f) {
+  @Override
+  protected String toStringOf(Float f) {
     return toGroupedBinary(Integer.toBinaryString(Float.floatToIntBits(f)), 32);
   }
 
-  private static String toStringOf(Double d) {
+  protected String toStringOf(Double d) {
     return toGroupedBinary(Long.toBinaryString(Double.doubleToRawLongBits(d)), 64);
   }
 
-  private static String toStringOf(Character character) {
+  @Override
+  protected String toStringOf(Character character) {
     return concat("'", toStringOf((short) (int) character), "'");
   }
 
@@ -87,5 +94,4 @@ public class BinaryRepresentation implements Representation {
   private static String toBinary(String value, int size) {
     return String.format("%" + size + "s", value).replace(' ', '0');
   }
-
 }

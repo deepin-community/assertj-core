@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
@@ -21,7 +21,7 @@ import static org.assertj.core.util.Lists.newArrayList;
 import java.util.List;
 
 import org.assertj.core.groups.Tuple;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class Tuple_Test {
 
@@ -43,14 +43,6 @@ public class Tuple_Test {
     assertThat(tuple).isEqualTo(new Tuple());
   }
 
-  @SuppressWarnings("deprecation")
-  @Test
-  public void add_an_element_to_a_tuple() {
-    Tuple tuple = new Tuple("Yoda", 800);
-    tuple.addData("Jedi");
-    assertThat(tuple).isEqualTo(new Tuple("Yoda", 800, "Jedi"));
-  }
-
   @Test
   public void convert_tuple_to_an_array() {
     Tuple tuple = new Tuple("Yoda", 800, "Jedi");
@@ -66,11 +58,11 @@ public class Tuple_Test {
   @Test
   public void tuple_representation() {
     Tuple tuple = new Tuple("Yoda", 800, "Jedi");
-    assertThat(tuple.toString()).isEqualTo("(\"Yoda\", 800, \"Jedi\")");
+    assertThat(tuple).hasToString("(\"Yoda\", 800, \"Jedi\")");
   }
 
   @Test
-  public void test_for_issue_448() throws Exception {
+  public void test_for_issue_448() {
     SinteticClass item1 = new SinteticClass("1".getBytes(), "Foo");
     SinteticClass item2 = new SinteticClass("2".getBytes(), "Bar");
     SinteticClass item3 = new SinteticClass("3".getBytes(), "Baz");
@@ -86,23 +78,25 @@ public class Tuple_Test {
                     .contains(tuple("2".getBytes(), "Bar"))
                     .contains(tuple("3".getBytes(), "Baz"));
   }
-}
 
-final class SinteticClass {
+  @SuppressWarnings("unused")
+  private final class SinteticClass {
 
-  private byte[] pk;
-  private String name;
+    private byte[] pk;
+    private String name;
 
-  public SinteticClass(byte[] pk, String name) {
-    this.pk = pk;
-    this.name = name;
+    public SinteticClass(byte[] pk, String name) {
+      this.pk = pk;
+      this.name = name;
+    }
+
+    public byte[] getPk() {
+      return pk;
+    }
+
+    public String getName() {
+      return name;
+    }
   }
 
-  public byte[] getPk() {
-    return pk;
-  }
-
-  public String getName() {
-    return name;
-  }
 }

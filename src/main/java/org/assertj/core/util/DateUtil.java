@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util;
 
@@ -17,6 +17,7 @@ import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.util.Preconditions.checkArgument;
 
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -49,13 +50,24 @@ public class DateUtil {
 
   /**
    * ISO 8601 date format (yyyy-MM-dd), example : <code>2003-04-23</code>
+   * @return a {@code yyyy-MM-dd} {@link DateFormat}
    */
   public static DateFormat newIsoDateFormat() {
     return strictDateFormatForPattern("yyyy-MM-dd");
   }
 
   /**
+   * ISO 8601 date-time format with ISO time zone (yyyy-MM-dd'T'HH:mm:ssX), example :
+   * <code>2003-04-26T03:01:02+00:00</code>
+   * @return a {@code yyyy-MM-dd'T'HH:mm:ssX} {@link DateFormat}
+   */
+  public static DateFormat newIsoDateTimeWithIsoTimeZoneFormat() {
+    return strictDateFormatForPattern("yyyy-MM-dd'T'HH:mm:ssX");
+  }
+
+  /**
    * ISO 8601 date-time format (yyyy-MM-dd'T'HH:mm:ss), example : <code>2003-04-26T13:01:02</code>
+   * @return a {@code yyyy-MM-dd'T'HH:mm:ss} {@link DateFormat}
    */
   public static DateFormat newIsoDateTimeFormat() {
     return strictDateFormatForPattern("yyyy-MM-dd'T'HH:mm:ss");
@@ -64,14 +76,25 @@ public class DateUtil {
   /**
    * ISO 8601 date-time format with millisecond (yyyy-MM-dd'T'HH:mm:ss.SSS), example :
    * <code>2003-04-26T03:01:02.999</code>
+   * @return a {@code yyyy-MM-dd'T'HH:mm:ss.SSS} {@link DateFormat}
    */
   public static DateFormat newIsoDateTimeWithMsFormat() {
     return strictDateFormatForPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
   }
 
   /**
+   * ISO 8601 date-time format with millisecond and ISO time zone (yyyy-MM-dd'T'HH:mm:ss.SSSX), example :
+   * <code>2003-04-26T03:01:02.758+00:00</code>
+   * @return a {@code yyyy-MM-dd'T'HH:mm:ss.SSSX} {@link DateFormat}
+   */
+  public static DateFormat newIsoDateTimeWithMsAndIsoTimeZoneFormat() {
+    return strictDateFormatForPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
+  }
+
+  /**
    * {@link Timestamp} date-time format with millisecond (yyyy-MM-dd HH:mm:ss.SSS), example :
    * <code>2003-04-26 03:01:02.999</code>
+   * @return a {@code yyyy-MM-dd HH:mm:ss.SSS} {@link DateFormat}
    */
   public static DateFormat newTimestampDateFormat() {
     return strictDateFormatForPattern("yyyy-MM-dd HH:mm:ss.SSS");
@@ -87,7 +110,7 @@ public class DateUtil {
    * Formats the given date using the ISO 8601 date-time format (yyyy-MM-dd'T'HH:mm:ss).<br>
    * Method is synchronized
    * because SimpleDateFormat is not thread safe (sigh).
-   * <p/>
+   * <p>
    * Returns null if given the date is null.
    *
    * @param date the date to format.
@@ -101,7 +124,7 @@ public class DateUtil {
    * Formats the given date using the ISO 8601 date-time format with millisecond (yyyy-MM-dd'T'HH:mm:ss:SSS).<br>
    * Method
    * is synchronized because SimpleDateFormat is not thread safe (sigh).
-   * <p/>
+   * <p>
    * Returns null if given the date is null.
    *
    * @param date the date to format.
@@ -114,7 +137,7 @@ public class DateUtil {
   /**
    * Formats the date of the given calendar using the ISO 8601 date-time format (yyyy-MM-dd'T'HH:mm:ss).<br> Method is
    * thread safe.
-   * <p/>
+   * <p>
    * Returns null if the given calendar is null.
    *
    * @param calendar the calendar to format.
@@ -141,10 +164,9 @@ public class DateUtil {
 
   /**
    * Utility method to parse a Date following {@link #ISO_DATE_TIME_FORMAT}, returns null if the given String is null.
-   * <p> 
+   * <p>
    * Example:
    * <pre><code class='java'> Date date = parseDatetime("2003-04-26T03:01:02");</code></pre>
-   * </p>
    *
    * @param dateAsString the string to parse as a Date following {@link #ISO_DATE_TIME_FORMAT}
    * @return the corresponding Date with time details or null if the given String is null.
@@ -164,7 +186,6 @@ public class DateUtil {
    * <p>
    * Example:
    * <pre><code class='java'> Date date = parseDatetimeWithMs("2003-04-26T03:01:02.999");</code></pre>
-   * </p>
    *
    * @param dateAsString the string to parse as a Date following {@link #ISO_DATE_TIME_FORMAT_WITH_MS}
    * @return the corresponding Date with time details or null if the given String is null.
@@ -290,14 +311,14 @@ public class DateUtil {
    * @throws IllegalArgumentException if one a the given Date is null.
    */
   public static long timeDifference(Date date1, Date date2) {
-    if (date1 == null || date2 == null) throw new IllegalArgumentException("Expecting date parameter not to be null");
+    checkArgument(date1 != null && date2 != null, "Expecting date parameter not to be null");
     return Math.abs(date1.getTime() - date2.getTime());
   }
 
   /**
    * Returns a copy of the given date without the time part (which is set to 00:00:00), for example :<br>
    * <code>truncateTime(2008-12-29T23:45:12)</code> will give <code>2008-12-29T00:00:00</code>.
-   * <p/>
+   * <p>
    * Returns null if the given Date is null.
    *
    * @param date we want to get the day part (the parameter is read only).
@@ -332,8 +353,8 @@ public class DateUtil {
   /**
    * Utility method to display a human readable time difference.
    *
-   * @param date1
-   * @param date2
+   * @param date1 the first date
+   * @param date2 the second date
    * @return a human readable time difference.
    */
   public static String formatTimeDifference(final Date date1, final Date date2) {

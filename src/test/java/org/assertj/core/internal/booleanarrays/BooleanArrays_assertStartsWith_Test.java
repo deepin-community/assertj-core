@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,25 +8,25 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.booleanarrays;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldStartWith.shouldStartWith;
-import static org.assertj.core.test.BooleanArrays.*;
-import static org.assertj.core.test.ErrorMessages.*;
+import static org.assertj.core.internal.ErrorMessages.valuesToLookForIsNull;
+import static org.assertj.core.test.BooleanArrays.arrayOf;
+import static org.assertj.core.test.BooleanArrays.emptyArray;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
-
-
 import static org.mockito.Mockito.verify;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.BooleanArrays;
 import org.assertj.core.internal.BooleanArraysBaseTest;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link BooleanArrays#assertStartsWith(AssertionInfo, boolean[], boolean[])}</code>.
@@ -38,8 +38,8 @@ public class BooleanArrays_assertStartsWith_Test extends BooleanArraysBaseTest {
 
   @Test
   public void should_throw_error_if_sequence_is_null() {
-    thrown.expectNullPointerException(valuesToLookForIsNull());
-    arrays.assertStartsWith(someInfo(), actual, null);
+    assertThatNullPointerException().isThrownBy(() -> arrays.assertStartsWith(someInfo(), actual, null))
+                                    .withMessage(valuesToLookForIsNull());
   }
 
   @Test
@@ -47,17 +47,16 @@ public class BooleanArrays_assertStartsWith_Test extends BooleanArraysBaseTest {
     actual = emptyArray();
     arrays.assertContains(someInfo(), actual, emptyArray());
   }
-  
+
   @Test
   public void should_fail_if_array_of_values_to_look_for_is_empty_and_actual_is_not() {
-    thrown.expect(AssertionError.class);
-    arrays.assertStartsWith(someInfo(), actual, emptyArray());
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arrays.assertStartsWith(someInfo(), actual, emptyArray()));
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    arrays.assertStartsWith(someInfo(), null, arrayOf(true));
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arrays.assertStartsWith(someInfo(), null, arrayOf(true)))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test

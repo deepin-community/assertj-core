@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.longarrays;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldBeSorted.shouldBeSortedAccordingToGivenComparator;
 import static org.assertj.core.test.LongArrays.emptyArray;
 import static org.assertj.core.test.TestData.someInfo;
@@ -26,8 +28,8 @@ import java.util.Comparator;
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.LongArrays;
 import org.assertj.core.internal.LongArraysBaseTest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -41,22 +43,12 @@ public class LongArrays_assertIsSortedAccordingToComparator_Test extends LongArr
   private Comparator<Long> longSquareComparator;
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() {
     super.setUp();
     actual = new long[] { 4L, 3L, 2L, 2L, 1L };
-    longDescendingOrderComparator = new Comparator<Long>() {
-      @Override
-      public int compare(Long long1, Long long2) {
-        return -long1.compareTo(long2);
-      }
-    };
-    longSquareComparator = new Comparator<Long>() {
-      @Override
-      public int compare(Long long1, Long long2) {
-        return new Long(long1 * long1).compareTo(new Long(long2 * long2));
-      }
-    };
+    longDescendingOrderComparator = (long1, long2) -> -long1.compareTo(long2);
+    longSquareComparator = (long1, long2) -> new Long(long1 * long1).compareTo(new Long(long2 * long2));
   }
 
   @Test
@@ -72,14 +64,13 @@ public class LongArrays_assertIsSortedAccordingToComparator_Test extends LongArr
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    arrays.assertIsSortedAccordingToComparator(someInfo(), null, longDescendingOrderComparator);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arrays.assertIsSortedAccordingToComparator(someInfo(), null, longDescendingOrderComparator))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
   public void should_fail_if_comparator_is_null() {
-    thrown.expect(NullPointerException.class);
-    arrays.assertIsSortedAccordingToComparator(someInfo(), emptyArray(), null);
+    assertThatNullPointerException().isThrownBy(() -> arrays.assertIsSortedAccordingToComparator(someInfo(), emptyArray(), null));
   }
 
   @Test

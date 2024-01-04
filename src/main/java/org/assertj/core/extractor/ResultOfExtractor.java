@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,11 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.extractor;
 
-import org.assertj.core.api.iterable.Extractor;
+import java.util.function.Function;
+
 import org.assertj.core.util.introspection.MethodSupport;
 
 /**
@@ -22,7 +23,7 @@ import org.assertj.core.util.introspection.MethodSupport;
  * @author Michał Piotrkowski
  * @author Mateusz Haligowski
  */
-class ResultOfExtractor<F> implements Extractor<F, Object> {
+class ResultOfExtractor<F> implements Function<F, Object> {
 
   private final String methodName;
   
@@ -34,7 +35,7 @@ class ResultOfExtractor<F> implements Extractor<F, Object> {
    * Behavior is described in {@link MethodSupport#methodResultFor(Object, String)}
    */
   @Override
-  public Object extract(F input) {
+  public Object apply(F input) {
     return MethodSupport.methodResultFor(input, methodName);
   }
 

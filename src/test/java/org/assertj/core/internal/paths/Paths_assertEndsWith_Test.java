@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,12 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.paths;
 
-import static junit.framework.TestCase.fail;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldEndWithPath.shouldEndWith;
 import static org.assertj.core.test.TestFailures.wasExpectingAssertionError;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
@@ -25,38 +25,30 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import org.assertj.core.api.exception.PathsException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class Paths_assertEndsWith_Test extends MockPathsBaseTest {
 
   @Test
   public void should_fail_if_actual_is_null() {
-	thrown.expectAssertionError(actualIsNull());
-	paths.assertEndsWith(info, null, other);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> paths.assertEndsWith(info, null, other))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
   public void should_fail_if_other_is_null() {
-	try {
-	  paths.assertEndsWith(info, actual, null);
-	  fail("expected a NullPointerException here");
-	} catch (NullPointerException e) {
-	  assertThat(e).hasMessage("the expected end path should not be null");
-	}
+    assertThatNullPointerException().isThrownBy(() -> paths.assertEndsWith(info, actual, null))
+                                    .withMessage("the expected end path should not be null");
   }
 
   @Test
   public void should_fail_with_PathsException_if_actual_cannot_be_resolved() throws IOException {
-	final IOException causeException = new IOException();
-	when(actual.toRealPath()).thenThrow(causeException);
+    final IOException causeException = new IOException();
+    when(actual.toRealPath()).thenThrow(causeException);
 
-	try {
-	  paths.assertEndsWith(info, actual, other);
-	  fail("expected a PathsException here");
-	} catch (PathsException e) {
-	  assertThat(e).hasMessage("failed to resolve actual real path");
-	  assertThat(e.getCause()).isSameAs(causeException);
-	}
+    assertThatExceptionOfType(PathsException.class).isThrownBy(() -> paths.assertEndsWith(info, actual, other))
+                                                   .withMessage("failed to resolve actual real path")
+                                                   .withCause(causeException);
   }
 
   @Test

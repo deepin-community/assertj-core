@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,11 +8,13 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
 import java.util.concurrent.Callable;
+
+import static org.assertj.core.error.ShouldBeInstance.shouldBeInstance;
 
 /**
  * Assertion methods for {@link Throwable}s.
@@ -31,29 +33,28 @@ public class ThrowableAssert extends AbstractThrowableAssert<ThrowableAssert, Th
     void call() throws Throwable;
   }
 
-  protected ThrowableAssert(Throwable actual) {
-	super(actual, ThrowableAssert.class);
+  public ThrowableAssert(Throwable actual) {
+    super(actual, ThrowableAssert.class);
   }
 
-  protected <V> ThrowableAssert(Callable<V> runnable) {
-	super(buildThrowableAssertFromCallable(runnable), ThrowableAssert.class);
+  public <V> ThrowableAssert(Callable<V> runnable) {
+    super(buildThrowableAssertFromCallable(runnable), ThrowableAssert.class);
   }
 
-  private static <V> Throwable buildThrowableAssertFromCallable(Callable<V> callable)
-	  throws AssertionError {
-	try {
-	  callable.call();
-	  // fail if the expected exception was *not* thrown
-	  Fail.fail("Expecting code to throw an exception.");
-	  // this will *never* happen...
-	  return null;
-	} catch (AssertionError e) {
-	  // do not handle AssertionErrors in the next catch block!
-	  throw e;
-	} catch (Throwable throwable) {
-	  // the throwable we will check
-	  return throwable;
-	}
+  private static <V> Throwable buildThrowableAssertFromCallable(Callable<V> callable) throws AssertionError {
+    try {
+      callable.call();
+      // fail if the expected exception was *not* thrown
+      Fail.fail("Expecting code to throw an exception.");
+      // this will *never* happen...
+      return null;
+    } catch (AssertionError e) {
+      // do not handle AssertionErrors in the next catch block!
+      throw e;
+    } catch (Throwable throwable) {
+      // the throwable we will check
+      return throwable;
+    }
   }
 
   public static Throwable catchThrowable(ThrowingCallable shouldRaiseThrowable) {
@@ -63,5 +64,16 @@ public class ThrowableAssert extends AbstractThrowableAssert<ThrowableAssert, Th
       return throwable;
     }
     return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <THROWABLE extends Throwable> THROWABLE catchThrowableOfType(ThrowingCallable shouldRaiseThrowable,
+                                                                             Class<THROWABLE> type) {
+    Throwable throwable = catchThrowable(shouldRaiseThrowable);
+    if (throwable == null) return null;
+    // check exception type
+    new ThrowableAssert(throwable).overridingErrorMessage(shouldBeInstance(throwable, type).create())
+                                  .isInstanceOf(type);
+    return (THROWABLE) throwable;
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,27 +8,60 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util;
 
+import static java.lang.String.format;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
+import static org.assertj.core.groups.FieldsOrPropertiesExtractor.extract;
 import static org.assertj.core.util.Lists.newArrayList;
 
-import java.util.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 /**
  * Utility methods related to <code>{@link Throwable}</code>s.
- * 
+ *
  * @author Alex Ruiz
+ * @author Daniel Zlotin
  */
 public final class Throwables {
+  private static final String ORG_ASSERTJ_CORE_ERROR_CONSTRUCTOR_INVOKER = "org.assertj.core.error.ConstructorInvoker";
+  private static final String JAVA_LANG_REFLECT_CONSTRUCTOR = "java.lang.reflect.Constructor";
+  private static final String ORG_ASSERTJ = "org.assert";
+
+  private static final Function<Throwable, String> ERROR_DESCRIPTION_EXTRACTOR = throwable -> {
+    Throwable cause = throwable.getCause();
+    if (cause == null) return throwable.getMessage();
+    // error has a cause, display the cause message and the first stack trace elements.
+    String stackTraceDescription = stream(cause.getStackTrace()).limit(5)
+                                                                .map(stackTraceElement -> format("\tat %s%n", stackTraceElement))
+                                                                .collect(joining());
+    return format("%s%n" +
+                  "cause message: %s%n" +
+                  "cause first five stack trace elements:%n" +
+                  "%s",
+                  throwable.getMessage(),
+                  cause.getMessage(),
+                  stackTraceDescription);
+  };
+
+  public static List<String> describeErrors(List<? extends Throwable> errors) {
+    return extract(errors, ERROR_DESCRIPTION_EXTRACTOR);
+  }
+
   /**
    * Appends the stack trace of the current thread to the one in the given <code>{@link Throwable}</code>.
-   * 
+   *
    * @param t the given {@code Throwable}.
    * @param methodToStartFrom the name of the method used as the starting point of the current thread's stack trace.
    */
-  public static void appendStackTraceInCurentThreadToThrowable(Throwable t, String methodToStartFrom) {
+  public static void appendStackTraceInCurrentThreadToThrowable(Throwable t, String methodToStartFrom) {
     List<StackTraceElement> stackTrace = newArrayList(t.getStackTrace());
     stackTrace.addAll(stackTraceInCurrentThread(methodToStartFrom));
     t.setStackTrace(stackTrace.toArray(new StackTraceElement[stackTrace.size()]));
@@ -51,10 +84,10 @@ public final class Throwables {
     return newArrayList(Thread.currentThread().getStackTrace());
   }
 
-/**
+  /**
    * Removes the AssertJ-related elements from the <code>{@link Throwable}</code> stack trace that have little value for
    * end user. Therefore, instead of seeing this:
-   * <pre><code class='java'> org.junit.ComparisonFailure: expected:<'[Ronaldo]'> but was:<'[Messi]'>
+   * <pre><code class='java'> org.junit.ComparisonFailure: expected:&lt;'[Ronaldo]'&gt; but was:&lt;'[Messi]'&gt;
    *   at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
    *   at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:39)
    *   at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:27)
@@ -69,7 +102,7 @@ public final class Throwables {
    *   at examples.StackTraceFilterExample.main(StackTraceFilterExample.java:13)</code></pre>
    *
    * We get this:
-   * <pre><code class='java'> org.junit.ComparisonFailure: expected:<'[Ronaldo]'> but was:<'[Messi]'>
+   * <pre><code class='java'> org.junit.ComparisonFailure: expected:&lt;'[Ronaldo]'&gt; but was:&lt;'[Messi]'&gt;
    *   at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
    *   at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:39)
    *   at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:27)
@@ -77,20 +110,21 @@ public final class Throwables {
    * @param throwable the {@code Throwable} to filter stack trace.
    */
   public static void removeAssertJRelatedElementsFromStackTrace(Throwable throwable) {
+    if (throwable == null) return;
     List<StackTraceElement> filtered = newArrayList(throwable.getStackTrace());
     StackTraceElement previous = null;
     for (StackTraceElement element : throwable.getStackTrace()) {
-      if (element.getClassName().contains("org.assert")) {
+      if (element.getClassName().contains(ORG_ASSERTJ)) {
         filtered.remove(element);
-        // Handle the case when AssertJ builds a ComparisonFailure by reflection (see ShouldBeEqual.newAssertionError
-        // method), the stack trace looks like:
+        // Handle the case when AssertJ builds a ComparisonFailure/AssertionFailedError by reflection
+        // (see ShouldBeEqual.newAssertionError method), the stack trace looks like:
         //
         // java.lang.reflect.Constructor.newInstance(Constructor.java:501),
         // org.assertj.core.error.ConstructorInvoker.newInstance(ConstructorInvoker.java:34),
         //
         // We want to remove java.lang.reflect.Constructor.newInstance element because it is related to AssertJ.
-        if (previous != null && previous.getClassName().equals("java.lang.reflect.Constructor")
-            && element.getClassName().contains("org.assertj.core.error.ConstructorInvoker")) {
+        if (previous != null && JAVA_LANG_REFLECT_CONSTRUCTOR.equals(previous.getClassName())
+            && element.getClassName().contains(ORG_ASSERTJ_CORE_ERROR_CONSTRUCTOR_INVOKER)) {
           filtered.remove(previous);
         }
       }
@@ -102,7 +136,7 @@ public final class Throwables {
 
   /**
    * Get the root cause (ie the last non null cause) from a {@link Throwable}.
-   * 
+   *
    * @param throwable the {@code Throwable} to get root cause from.
    * @return the root cause if any, else {@code null}.
    */
@@ -114,6 +148,31 @@ public final class Throwables {
     return throwable;
   }
 
-  private Throwables() {
+  /**
+   * Get the stack trace from a {@link Throwable} as a {@link String}.
+   *
+   * <p>
+   * The result of this method vary by JDK version as this method uses
+   * {@link Throwable#printStackTrace(java.io.PrintWriter)}. On JDK1.3 and earlier, the cause exception will not be
+   * shown unless the specified throwable alters printStackTrace.
+   * </p>
+   *
+   * @param throwable the {@code Throwable} to get stack trace from.
+   * @return the stack trace as a {@link String}.
+   */
+  public static String getStackTrace(Throwable throwable) {
+    StringWriter sw = null;
+    PrintWriter pw = null;
+    try {
+      sw = new StringWriter();
+      pw = new PrintWriter(sw, true);
+      throwable.printStackTrace(pw);
+      return sw.getBuffer().toString();
+    } finally {
+      Closeables.closeQuietly(sw, pw);
+    }
   }
+
+  private Throwables() {}
+
 }

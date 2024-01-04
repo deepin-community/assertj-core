@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
@@ -95,6 +95,15 @@ public interface ComparisonStrategy {
   void iterableRemoves(Iterable<?> iterable, Object value);
 
   /**
+   * Removes the first value in {@code iterable} that matches the {@code value} according to the implemented comparison
+   * strategy. If given {@link Iterable} is null, does nothing.
+   *
+   * @param iterable the {@link Iterable} we want remove value from
+   * @param value object to remove from given {@link Iterable}
+   */
+  void iterablesRemoveFirst(Iterable<?> iterable, Object value);
+
+  /**
    * Returns any duplicate elements from the given {@link Iterable} according to the implemented comparison strategy.
    * 
    * @param iterable the given {@link Iterable} we want to extract duplicate elements.
@@ -131,7 +140,7 @@ public interface ComparisonStrategy {
   boolean stringStartsWith(String string, String prefix);
 
   /**
-   * Returns true if sstring ends with suffix according to the implemented comparison strategy, false otherwise.
+   * Returns true if string ends with suffix according to the implemented comparison strategy, false otherwise.
    * 
    * @param string the String we want to look starting suffix
    * @param suffix the suffix String to look for at string's end

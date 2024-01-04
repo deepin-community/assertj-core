@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,59 +8,101 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
 import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.function.Consumer;
+
+import org.assertj.core.presentation.Representation;
+import org.assertj.core.presentation.StandardRepresentation;
 
 /**
  * Base contract of all assertion objects: the minimum functionality that any assertion object should provide.
- * 
- * @param <S> the "self" type of this assertion class. Please read &quot;<a href="http://bit.ly/1IZIRcY"
+ *
+ * @param <SELF> the "self" type of this assertion class. Please read &quot;<a href="http://bit.ly/1IZIRcY"
  *          target="_blank">Emulating
  *          'self types' using Java Generics to simplify fluent API implementation</a>&quot; for more details.
- * @param <A> the type of the "actual" value.
- * 
+ * @param <ACTUAL> the type of the "actual" value.
+ *
  * @author Yvonne Wang
  * @author Alex Ruiz
  * @author Nicolas François
  * @author Mikhail Mazursky
  */
-public interface Assert<S extends Assert<S, A>, A> extends Descriptable<S>, ExtensionPoints<S, A> {
+public interface Assert<SELF extends Assert<SELF, ACTUAL>, ACTUAL> extends Descriptable<SELF>, ExtensionPoints<SELF, ACTUAL> {
 
   /**
    * Verifies that the actual value is equal to the given one.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(&quot;abc&quot;).isEqualTo(&quot;abc&quot;);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isEqualTo(new HashMap&lt;String, Integer&gt;());
+   *
+   * // assertions will fail
+   * assertThat(&quot;abc&quot;).isEqualTo(&quot;123&quot;);
+   * assertThat(new ArrayList&lt;String&gt;()).isEqualTo(1);</code></pre>
+   *
    * @param expected the given value to compare the actual value to.
    * @return {@code this} assertion object.
    * @throws AssertionError if the actual value is not equal to the given one.
    */
-  S isEqualTo(Object expected);
+  SELF isEqualTo(Object expected);
 
   /**
    * Verifies that the actual value is not equal to the given one.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(&quot;abc&quot;).isNotEqualTo(&quot;123&quot;);
+   * assertThat(new ArrayList&lt;String&gt;()).isNotEqualTo(1);
+   *
+   * // assertions will fail
+   * assertThat(&quot;abc&quot;).isNotEqualTo(&quot;abc&quot;);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isNotEqualTo(new HashMap&lt;String, Integer&gt;());</code></pre>
+   *
    * @param other the given value to compare the actual value to.
    * @return {@code this} assertion object.
    * @throws AssertionError if the actual value is equal to the given one.
    */
-  S isNotEqualTo(Object other);
+  SELF isNotEqualTo(Object other);
 
   /**
    * Verifies that the actual value is {@code null}.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> String value = null;
+   * // assertion will pass
+   * assertThat(value).isNull();
+   *
+   * // assertions will fail
+   * assertThat(&quot;abc&quot;).isNull();
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isNull();</code></pre>
+   *
    * @throws AssertionError if the actual value is not {@code null}.
    */
   void isNull();
 
   /**
    * Verifies that the actual value is not {@code null}.
-   * 
+  * <p>
+   * Example:
+   * <pre><code class='java'> // assertion will pass
+   * assertThat(&quot;abc&quot;).isNotNull();
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isNotNull();
+   *
+   * // assertion will fail
+   * String value = null;
+   * assertThat(value).isNotNull();</code></pre>
+   *
    * @return {@code this} assertion object.
    * @throws AssertionError if the actual value is {@code null}.
    */
-  S isNotNull();
+  SELF isNotNull();
 
   /**
    * Verifies that the actual value is the same as the given one, ie using == comparison.
@@ -70,19 +112,19 @@ public interface Assert<S extends Assert<S, A>, A> extends Descriptable<S>, Exte
    * Name tyrion = new Name("Tyrion", "Lannister");
    * Name alias  = tyrion;
    * Name clone  = new Name("Tyrion", "Lannister");
-   * 
+   *
    * // assertions succeed:
    * assertThat(tyrion).isSameAs(alias)
    *                   .isEqualTo(clone);
-   *                      
+   *
    * // assertion fails:
    * assertThat(tyrion).isSameAs(clone);</code></pre>
-   * 
+   *
    * @param expected the given value to compare the actual value to.
    * @return {@code this} assertion object.
    * @throws AssertionError if the actual value is not the same as the given one.
    */
-  S isSameAs(Object expected);
+  SELF isSameAs(Object expected);
 
   /**
    * Verifies that the actual value is not the same as the given one, ie using == comparison.
@@ -92,141 +134,253 @@ public interface Assert<S extends Assert<S, A>, A> extends Descriptable<S>, Exte
    * Name tyrion = new Name("Tyrion", "Lannister");
    * Name alias  = tyrion;
    * Name clone  = new Name("Tyrion", "Lannister");
-   * 
+   *
    * // assertions succeed:
    * assertThat(clone).isNotSameAs(tyrion)
    *                  .isEqualTo(tyrion);
-   *                      
+   *
    * // assertion fails:
    * assertThat(alias).isNotSameAs(tyrion);</code></pre>
-   * 
+   *
    * @param other the given value to compare the actual value to.
    * @return {@code this} assertion object.
    * @throws AssertionError if the actual value is the same as the given one.
    */
-  S isNotSameAs(Object other);
+  SELF isNotSameAs(Object other);
 
   /**
    * Verifies that the actual value is present in the given array of values.
    * <p>
+   * This assertion always fails if the given array of values is empty.
+   * <p>
    * Example:
    * <pre><code class='java'> Ring[] elvesRings = new Ring[] { vilya, nenya, narya };
-   * 
-   * // assertions will pass:
+   *
+   * // assertion will pass:
    * assertThat(nenya).isIn(elvesRings);
-   * 
+   *
    * // assertions will fail:
-   * assertThat(oneRing).isIn(elvesRings);</code></pre>
-   * 
+   * assertThat(oneRing).isIn(elvesRings);
+   * assertThat(oneRing).isIn(new Ring[0]);</code></pre>
+   *
    * @param values the given array to search the actual value in.
    * @return {@code this} assertion object.
    * @throws NullPointerException if the given array is {@code null}.
-   * @throws IllegalArgumentException if the given array is empty.
    * @throws AssertionError if the actual value is not present in the given array.
    */
-  S isIn(Object... values);
+  SELF isIn(Object... values);
 
   /**
    * Verifies that the actual value is not present in the given array of values.
    * <p>
+   * This assertion always succeeds if the given array of values is empty.
+   * <p>
    * Example:
    * <pre><code class='java'> Ring[] elvesRings = new Ring[] { vilya, nenya, narya };
-   * 
+   *
    * // assertions will pass:
    * assertThat(oneRing).isNotIn(elvesRings);
-   * 
-   * // assertions will fail:
+   * assertThat(oneRing).isNotIn(new Ring[0]);
+   *
+   * // assertion will fail:
    * assertThat(nenya).isNotIn(elvesRings);</code></pre>
-   * 
+   *
    * @param values the given array to search the actual value in.
    * @return {@code this} assertion object.
    * @throws NullPointerException if the given array is {@code null}.
-   * @throws IllegalArgumentException if the given array is empty.
    * @throws AssertionError if the actual value is present in the given array.
    */
-  S isNotIn(Object... values);
+  SELF isNotIn(Object... values);
 
   /**
-   * Verifies that the actual value is present in the given values.
+   * Verifies that the actual value is present in the given iterable.
+   * <p>
+   * This assertion always fails if the given iterable is empty.
    * <p>
    * Example:
-   * <pre><code class='java'> Iterable&lt;Ring&gt; elvesRings = newArrayList(vilya, nenya, narya);
-   * 
-   * // assertions will pass:
+   * <pre><code class='java'> Iterable&lt;Ring&gt; elvesRings = list(vilya, nenya, narya);
+   *
+   * // assertion will pass:
    * assertThat(nenya).isIn(elvesRings);
-   * 
+   *
    * // assertions will fail:
-   * assertThat(oneRing).isIn(elvesRings);</code></pre>
-   * 
+   * assertThat(oneRing).isIn(elvesRings);
+   * assertThat(oneRing).isIn(emptyList());</code></pre>
+   *
    * @param values the given iterable to search the actual value in.
    * @return {@code this} assertion object.
    * @throws NullPointerException if the given collection is {@code null}.
-   * @throws IllegalArgumentException if the given collection is empty.
    * @throws AssertionError if the actual value is not present in the given collection.
    */
-  S isIn(Iterable<?> values);
+  SELF isIn(Iterable<?> values);
 
   /**
-   * Verifies that the actual value is not present in the given values.
+   * Verifies that the actual value is not present in the given iterable.
+   * <p>
+   * This assertion always succeeds if the given iterable is empty.
    * <p>
    * Example:
-   * <pre><code class='java'> Iterable&lt;Ring&gt; elvesRings = newArrayList(vilya, nenya, narya);
-   * 
+   * <pre><code class='java'> Iterable&lt;Ring&gt; elvesRings = list(vilya, nenya, narya);
+   *
    * // assertions will pass:
    * assertThat(oneRing).isNotIn(elvesRings);
-   * 
-   * // assertions will fail:
+   * assertThat(oneRing).isNotIn(emptyList());
+   *
+   * // assertion will fail:
    * assertThat(nenya).isNotIn(elvesRings);</code></pre>
-   * 
+   *
    * @param values the given iterable to search the actual value in.
    * @return {@code this} assertion object.
    * @throws NullPointerException if the given collection is {@code null}.
-   * @throws IllegalArgumentException if the given collection is empty.
    * @throws AssertionError if the actual value is present in the given collection.
    */
-  S isNotIn(Iterable<?> values);
+  SELF isNotIn(Iterable<?> values);
 
   /**
-   * Use given custom comparator instead of relying on actual type A equals method for incoming assertion checks.
+   * Use the given custom comparator instead of relying on actual type A equals method for incoming assertion checks.
    * <p>
-   * Custom comparator is bound to assertion instance, meaning that if a new assertion is created, it will use default
-   * comparison strategy.
+   * The custom comparator is bound to assertion instance, meaning that if a new assertion instance is created, the default
+   * comparison strategy will be used.
    * <p>
    * Examples :
    * <pre><code class='java'> // frodo and sam are instances of Character with Hobbit race (obviously :).
-   * // raceComparator implements Comparator&lt;Character&gt; 
+   * // raceComparator implements Comparator&lt;Character&gt;
    * assertThat(frodo).usingComparator(raceComparator).isEqualTo(sam);</code></pre>
-   * 
-   * @param customComparator the comparator to use for incoming assertion checks.
+   *
+   * @param customComparator the comparator to use for the incoming assertion checks.
    * @throws NullPointerException if the given comparator is {@code null}.
    * @return {@code this} assertion object.
    */
-  S usingComparator(Comparator<? super A> customComparator);
+  SELF usingComparator(Comparator<? super ACTUAL> customComparator);
 
   /**
-   * Revert to standard comparison for incoming assertion checks.
+   * Use the given custom comparator instead of relying on actual type A equals method for incoming assertion checks.
    * <p>
-   * This method should be used to disable a custom comparison strategy set by calling
-   * {@link #usingComparator(Comparator)}.
-   * 
+   * The custom comparator is bound to assertion instance, meaning that if a new assertion instance is created, the default
+   * comparison strategy will be used.
+   * <p>
+   * Examples :
+   * <pre><code class='java'> // frodo and sam are instances of Character with Hobbit race (obviously :).
+   * // raceComparator implements Comparator&lt;Character&gt;
+   * assertThat(frodo).usingComparator(raceComparator, "Hobbit Race Comparator").isEqualTo(sam);</code></pre>
+   *
+   * @param customComparator the comparator to use for the incoming assertion checks.
+   * @param customComparatorDescription comparator description to be used in assertion error messages
+   * @throws NullPointerException if the given comparator is {@code null}.
    * @return {@code this} assertion object.
    */
-  S usingDefaultComparator();
+  SELF usingComparator(Comparator<? super ACTUAL> customComparator, String customComparatorDescription);
+
+  /**
+   * Revert to standard comparison for the incoming assertion checks.
+   * <p>
+   * This method should be used to disable a custom comparison strategy set by calling {@link #usingComparator(Comparator) usingComparator}.
+   *
+   * @return {@code this} assertion object.
+   */
+  SELF usingDefaultComparator();
+
+  /**
+   * Uses an {@link InstanceOfAssertFactory} to verify that the actual value is an instance of a given type and to produce
+   * a new {@link Assert} narrowed to that type.
+   * <p>
+   * {@link InstanceOfAssertFactories} provides static factories for all the types supported by {@code Assertions#assertThat}.
+   * <p>
+   * Additional factories can be created with custom {@code InstanceOfAssertFactory} instances.
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * Object string = &quot;abc&quot;;
+   * assertThat(string).asInstanceOf(InstanceOfAssertFactories.STRING).startsWith(&quot;ab&quot;);
+   *
+   * Object integer = 1;
+   * assertThat(integer).asInstanceOf(InstanceOfAssertFactories.INTEGER).isNotZero();
+   *
+   * // assertion will fail
+   * assertThat(&quot;abc&quot;).asInstanceOf(InstanceOfAssertFactories.INTEGER);</code></pre>
+   *
+   * @param <ASSERT>                the type of the resulting {@code Assert}.
+   * @param instanceOfAssertFactory the factory which verifies the type and creates the new {@code Assert}.
+   * @throws NullPointerException if the given factory is {@code null}.
+   * @return the narrowed {@code Assert} instance.
+   *
+   * @see InstanceOfAssertFactory
+   * @see InstanceOfAssertFactories
+   *
+   * @since 3.13.0
+   */
+  <ASSERT extends AbstractAssert<?, ?>> ASSERT asInstanceOf(InstanceOfAssertFactory<?, ASSERT> instanceOfAssertFactory);
 
   /**
    * Verifies that the actual value is an instance of the given type.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(&quot;abc&quot;).isInstanceOf(String.class);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isInstanceOf(HashMap.class);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isInstanceOf(Map.class);
+   *
+   * // assertions will fail
+   * assertThat(1).isInstanceOf(String.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isInstanceOf(LinkedList.class);</code></pre>
+   *
    * @param type the type to check the actual value against.
    * @return this assertion object.
    * @throws NullPointerException if the given type is {@code null}.
    * @throws AssertionError if the actual value is {@code null}.
    * @throws AssertionError if the actual value is not an instance of the given type.
    */
-  S isInstanceOf(Class<?> type);
+  SELF isInstanceOf(Class<?> type);
+
+  /**
+   * Verifies that the actual value is an instance of the given type satisfying the given requirements expressed as a {@link Consumer}.
+   * <p>
+   * This is useful to perform a group of assertions on a single object after checking its runtime type.
+   * <p>
+   * Example:
+   * <pre><code class='java'> // second constructor parameter is the light saber color
+   * Object yoda = new Jedi("Yoda", "Green");
+   * Object luke = new Jedi("Luke Skywalker", "Green");
+   *
+   * Consumer&lt;Jedi&gt; jediRequirements = jedi -&gt; {
+   *   assertThat(jedi.getLightSaberColor()).isEqualTo("Green");
+   *   assertThat(jedi.getName()).doesNotContain("Dark");
+   * };
+   *
+   * // assertions succeed:
+   * assertThat(yoda).isInstanceOfSatisfying(Jedi.class, jediRequirements);
+   * assertThat(luke).isInstanceOfSatisfying(Jedi.class, jediRequirements);
+   *
+   * // assertions fail:
+   * Jedi vader = new Jedi("Vader", "Red");
+   * assertThat(vader).isInstanceOfSatisfying(Jedi.class, jediRequirements);
+   * // not a Jedi !
+   * assertThat("foo").isInstanceOfSatisfying(Jedi.class, jediRequirements);</code></pre>
+   *
+   * @param <T> the generic type to check the actual value against.
+   * @param type the type to check the actual value against.
+   * @param requirements the requirements expressed as a {@link Consumer}.
+   * @return this assertion object.
+   * @throws NullPointerException if the given type is {@code null}.
+   * @throws NullPointerException if the given Consumer is {@code null}.
+   * @throws AssertionError if the actual value is {@code null}.
+   * @throws AssertionError if the actual value is not an instance of the given type.
+   */
+  <T> SELF isInstanceOfSatisfying(Class<T> type, Consumer<T> requirements);
 
   /**
    * Verifies that the actual value is an instance of any of the given types.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(&quot;abc&quot;).isInstanceOfAny(String.class, Integer.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isInstanceOfAny(LinkedList.class, ArrayList.class);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isInstanceOfAny(TreeMap.class, Map.class);
+   *
+   * // assertions will fail
+   * assertThat(1).isInstanceOfAny(Double.class, Float.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isInstanceOfAny(LinkedList.class, Vector.class);</code></pre>
+   *
    * @param types the types to check the actual value against.
    * @return this assertion object.
    * @throws AssertionError if the actual value is {@code null}.
@@ -234,22 +388,42 @@ public interface Assert<S extends Assert<S, A>, A> extends Descriptable<S>, Exte
    * @throws NullPointerException if the given array of types is {@code null}.
    * @throws NullPointerException if the given array of types contains {@code null}s.
    */
-  S isInstanceOfAny(Class<?>... types);
+  SELF isInstanceOfAny(Class<?>... types);
 
   /**
    * Verifies that the actual value is not an instance of the given type.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(1).isNotInstanceOf(Double.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isNotInstanceOf(LinkedList.class);
+   *
+   * // assertions will fail
+   * assertThat(&quot;abc&quot;).isNotInstanceOf(String.class);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isNotInstanceOf(HashMap.class);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isNotInstanceOf(Map.class);</code></pre>
+   *
    * @param type the type to check the actual value against.
    * @return this assertion object.
    * @throws NullPointerException if the given type is {@code null}.
    * @throws AssertionError if the actual value is {@code null}.
    * @throws AssertionError if the actual value is an instance of the given type.
    */
-  S isNotInstanceOf(Class<?> type);
+  SELF isNotInstanceOf(Class<?> type);
 
   /**
    * Verifies that the actual value is not an instance of any of the given types.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(1).isNotInstanceOfAny(Double.class, Float.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isNotInstanceOfAny(LinkedList.class, Vector.class);
+   *
+   * // assertions will fail
+   * assertThat(1).isNotInstanceOfAny(Double.class, Integer.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isNotInstanceOfAny(LinkedList.class, ArrayList.class);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isNotInstanceOfAny(TreeMap.class, Map.class);</code></pre>
+   *
    * @param types the types to check the actual value against.
    * @return this assertion object.
    * @throws AssertionError if the actual value is {@code null}.
@@ -257,91 +431,151 @@ public interface Assert<S extends Assert<S, A>, A> extends Descriptable<S>, Exte
    * @throws NullPointerException if the given array of types is {@code null}.
    * @throws NullPointerException if the given array of types contains {@code null}s.
    */
-  S isNotInstanceOfAny(Class<?>... types);
+  SELF isNotInstanceOfAny(Class<?>... types);
 
   /**
    * Verifies that the actual value has the same class as the given object.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(1).hasSameClassAs(2);
+   * assertThat(&quot;abc&quot;).hasSameClassAs(&quot;123&quot;);
+   * assertThat(new ArrayList&lt;String&gt;()).hasSameClassAs(new ArrayList&lt;Integer&gt;());
+   *
+   * // assertions will fail
+   * assertThat(1).hasSameClassAs(&quot;abc&quot;);
+   * assertThat(new ArrayList&lt;String&gt;()).hasSameClassAs(new LinkedList&lt;String&gt;());</code></pre>
+   *
    * @param other the object to check type against.
    * @return this assertion object.
    * @throws AssertionError if the actual has not the same type has the given object.
    * @throws NullPointerException if the actual value is null.
    * @throws NullPointerException if the given object is null.
    */
-  S hasSameClassAs(Object other);
+  SELF hasSameClassAs(Object other);
 
   /**
-   * Verifies that actual <code>actual.toString()</code> is equal to the given <code>String</code>.
+   * Verifies that actual {@code actual.toString()} is equal to the given {@code String}.
    * <p>
    * Example :
-   * <pre><code class='java'> CartoonCaracter homer = new CartoonCaracter("Homer");
+   * <pre><code class='java'> CartoonCharacter homer = new CartoonCharacter("Homer");
    *
-   * // Instead of writing ...  
+   * // Instead of writing ...
    * assertThat(homer.toString()).isEqualTo("Homer");
-   * // ... you can simply write: 
+   * // ... you can simply write:
    * assertThat(homer).hasToString("Homer");</code></pre>
-   * 
+   *
    * @param expectedToString the expected String description of actual.
    * @return this assertion object.
-   * @throws AssertionError if <code>actual.toString()</code> result is not to the given <code>String</code>.
+   * @throws AssertionError if {@code actual.toString()} result is not to the given {@code String}.
    * @throws AssertionError if actual is {@code null}.
    */
-  S hasToString(String expectedToString);
+  SELF hasToString(String expectedToString);
 
   /**
    * Verifies that the actual value does not have the same class as the given object.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(1).doesNotHaveSameClassAs(&quot;abc&quot;);
+   * assertThat(new ArrayList&lt;String&gt;()).doesNotHaveSameClassAs(new LinkedList&lt;String&gt;());
+   *
+   * // assertions will fail
+   * assertThat(1).doesNotHaveSameClassAs(2);
+   * assertThat(&quot;abc&quot;).doesNotHaveSameClassAs(&quot;123&quot;);
+   * assertThat(new ArrayList&lt;String&gt;()).doesNotHaveSameClassAs(new ArrayList&lt;Integer&gt;());</code></pre>
+   *
    * @param other the object to check type against.
    * @return this assertion object.
    * @throws AssertionError if the actual has the same type has the given object.
    * @throws NullPointerException if the actual value is null.
    * @throws NullPointerException if the given object is null.
    */
-  S doesNotHaveSameClassAs(Object other);
+  SELF doesNotHaveSameClassAs(Object other);
 
   /**
    * Verifies that the actual value is <b>exactly</b> an instance of the given type.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(&quot;abc&quot;).isExactlyInstanceOf(String.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isExactlyInstanceOf(ArrayList.class);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isExactlyInstanceOf(HashMap.class);
+   *
+   * // assertions will fail
+   * assertThat(1).isExactlyInstanceOf(String.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isExactlyInstanceOf(List.class);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isExactlyInstanceOf(Map.class);</code></pre>
+   *
    * @param type the type to check the actual value against.
    * @return this assertion object.
    * @throws AssertionError if the actual is not <b>exactly</b> an instance of given type.
    * @throws NullPointerException if the actual value is null.
    * @throws NullPointerException if the given object is null.
    */
-  S isExactlyInstanceOf(Class<?> type);
+  SELF isExactlyInstanceOf(Class<?> type);
 
   /**
    * Verifies that the actual value is not <b>exactly</b> an instance of given type.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(1).isNotExactlyInstanceOf(String.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isNotExactlyInstanceOf(List.class);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isNotExactlyInstanceOf(Map.class);
+   *
+   * // assertions will fail
+   * assertThat(&quot;abc&quot;).isNotExactlyInstanceOf(String.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isNotExactlyInstanceOf(ArrayList.class);
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isNotExactlyInstanceOf(HashMap.class);</code></pre>
+   *
    * @param type the type to check the actual value against.
    * @return this assertion object.
-   * @throws AssertionError if the actual is exactly a instance of given type.
+   * @throws AssertionError if the actual is exactly an instance of given type.
    * @throws NullPointerException if the actual value is null.
    * @throws NullPointerException if the given object is null.
    */
-  S isNotExactlyInstanceOf(Class<?> type);
+  SELF isNotExactlyInstanceOf(Class<?> type);
 
   /**
    * Verifies that the actual value type is in given types.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isOfAnyClassIn(HashMap.class, TreeMap.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isOfAnyClassIn(ArrayList.class, LinkedList.class);
+   *
+   * // assertions will fail
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isOfAnyClassIn(TreeMap.class, Map.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isOfAnyClassIn(LinkedList.class, List.class);</code></pre>
+   *
    * @param types the types to check the actual value against.
    * @return this assertion object.
    * @throws AssertionError if the actual value type is not in given type.
    * @throws NullPointerException if the actual value is null.
    * @throws NullPointerException if the given types is null.
    */
-  S isOfAnyClassIn(Class<?>... types);
+  SELF isOfAnyClassIn(Class<?>... types);
 
   /**
    * Verifies that the actual value type is not in given types.
-   * 
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isNotOfAnyClassIn(Map.class, TreeMap.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isNotOfAnyClassIn(LinkedList.class, List.class);
+   *
+   * // assertions will fail
+   * assertThat(new HashMap&lt;String, Integer&gt;()).isNotOfAnyClassIn(HashMap.class, TreeMap.class);
+   * assertThat(new ArrayList&lt;String&gt;()).isNotOfAnyClassIn(ArrayList.class, LinkedList.class);</code></pre>
+   *
    * @param types the types to check the actual value against.
    * @return this assertion object.
    * @throws AssertionError if the actual value type is in given types.
    * @throws NullPointerException if the actual value is null.
    * @throws NullPointerException if the given types is null.
    */
-  S isNotOfAnyClassIn(Class<?>... types);
+  SELF isNotOfAnyClassIn(Class<?>... types);
 
   /**
    * Verifies that the actual value is an instance of List,
@@ -349,23 +583,32 @@ public interface Assert<S extends Assert<S, A>, A> extends Descriptable<S>, Exte
    * assertions from this call.
    * <p>
    * Example :
-   * <pre><code class='java'> Object listAsObject = newArrayList(1, 2, 3);
+   * <pre><code class='java'> Object sortedListAsObject = Arrays.asList(1, 2, 3);
    *
-   * assertThat(listAsObject).asList().isSorted();</code></pre>
+   * // assertion will pass
+   * assertThat(sortedListAsObject).asList().isSorted();
+   *
+   * Object unsortedListAsObject = Arrays.asList(3, 1, 2);
+   *
+   * // assertion will fail
+   * assertThat(unsortedListAsObject).asList().isSorted();</code></pre>
    *
    * @return a list assertion object
    */
-  AbstractListAssert<?, ?, Object> asList();
+  AbstractListAssert<?, List<?>, Object, ObjectAssert<Object>> asList();
 
   /**
-   * Verifies that the actual value is an instance of String,
-   * and returns a String assertion, to allow chaining of String-specific
-   * assertions from this call.
+   * Returns a String assertion for the <code>toString()</code> of the actual
+   * value, to allow chaining of String-specific assertions from this call.
    * <p>
    * Example :
    * <pre><code class='java'> Object stringAsObject = "hello world";
    *
-   * assertThat(stringAsObject).asString().contains("hello");</code></pre>
+   * // assertion will pass
+   * assertThat(stringAsObject).asString().contains("hello");
+   *
+   * // assertion will fail
+   * assertThat(stringAsObject).asString().contains("holla");</code></pre>
    *
    * @return a string assertion object
    */
@@ -374,7 +617,7 @@ public interface Assert<S extends Assert<S, A>, A> extends Descriptable<S>, Exte
   /**
    * @deprecated
    *             Throws <code>{@link UnsupportedOperationException}</code> if called. It is easy to accidentally call
-   *             <code>{@link #equals(Object)}</code> instead of <code>{@link #isEqualTo(Object)}</code>.
+   *             <code>equals(Object)</code> instead of <code>{@link #isEqualTo(Object)}</code>.
    * @throws UnsupportedOperationException if this method is called.
    */
   @Override
@@ -382,37 +625,37 @@ public interface Assert<S extends Assert<S, A>, A> extends Descriptable<S>, Exte
   boolean equals(Object obj);
 
   /**
-   * In case of assertion error, the thread dump will be printed on {@link System#err}.
+   * In case of an assertion error, a thread dump will be printed to {@link System#err}.
    * <p>
    * Example :
    * <pre><code class='java'> assertThat("Messi").withThreadDumpOnError().isEqualTo("Ronaldo");</code></pre>
-   * 
-   * will print the thread dump, something looking like:
-   * <pre><code>"JDWP Command Reader"
+   *
+   * will print a thread dump, something similar to this:
+   * <pre>{@code "JDWP Command Reader"
    * 	java.lang.Thread.State: RUNNABLE
-   * 
+   *
    * "JDWP Event Helper Thread"
    * 	java.lang.Thread.State: RUNNABLE
-   * 
+   *
    * "JDWP Transport Listener: dt_socket"
    * 	java.lang.Thread.State: RUNNABLE
-   * 
+   *
    * "Signal Dispatcher"
    * 	java.lang.Thread.State: RUNNABLE
-   * 
+   *
    * "Finalizer"
    * 	java.lang.Thread.State: WAITING
    * 		at java.lang.Object.wait(Native Method)
    * 		at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:135)
    * 		at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:151)
    * 		at java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:189)
-   * 
+   *
    * "Reference Handler"
    * 	java.lang.Thread.State: WAITING
    * 		at java.lang.Object.wait(Native Method)
    * 		at java.lang.Object.wait(Object.java:503)
    * 		at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:133)
-   * 
+   *
    * "main"
    * 	java.lang.Thread.State: RUNNABLE
    * 		at sun.management.ThreadImpl.dumpThreads0(Native Method)
@@ -422,9 +665,84 @@ public interface Assert<S extends Assert<S, A>, A> extends Descriptable<S>, Exte
    * 		at org.assertj.core.internal.Failures.failure(Failures.java:91)
    * 		at org.assertj.core.internal.Objects.assertEqual(Objects.java:314)
    * 		at org.assertj.core.api.AbstractAssert.isEqualTo(AbstractAssert.java:198)
-   * 		at org.assertj.examples.ThreadDumpOnErrorExample.main(ThreadDumpOnErrorExample.java:28)</code></pre>
-   * 
+   * 		at org.assertj.examples.ThreadDumpOnErrorExample.main(ThreadDumpOnErrorExample.java:28)}</pre>
+   *
    * @return this assertion object.
    */
-  S withThreadDumpOnError();
+  SELF withThreadDumpOnError();
+
+  /**
+   * Use the given {@link Representation} to describe/represent values in AssertJ error messages.
+   * <p>
+   * The usual way to introduce a new {@link Representation} is to extend {@link StandardRepresentation}
+   * and override any existing {@code toStringOf} methods that don't suit you. For example you can control
+   * {@link Date} formatting by overriding {@link StandardRepresentation#toStringOf(Date)}).
+   * <p>
+   * You can also control other types format by overriding {@link StandardRepresentation#toStringOf(Object)})
+   * calling your formatting method first and then fall back to the default representation by calling {@code super.toStringOf(Object)}.
+   * <p>
+   * Example :
+   * <pre><code class='java'> private class Example {}
+   *
+   * private class CustomRepresentation extends StandardRepresentation {
+   *
+   *   // override needed to hook specific formatting
+   *   {@literal @}Override
+   *   public String toStringOf(Object o) {
+   *     if (o instanceof Example) return "Example";
+   *     // fall back to default formatting
+   *     return super.toStringOf(o);
+   *   }
+   *
+   *   // change String representation
+   *   {@literal @}Override
+   *   protected String toStringOf(String s) {
+   *     return "$" + s + "$";
+   *   }
+   * }
+   *
+   * // next assertion fails with error : "expected:&lt;[null]&gt; but was:&lt;[Example]&gt;"
+   * Example example = new Example();
+   * assertThat(example).withRepresentation(new CustomRepresentation())
+   *                    .isNull(); // example is not null !
+   *
+   * // next assertion fails ...
+   * assertThat("foo").withRepresentation(new CustomRepresentation())
+   *                  .startsWith("bar");
+   * // ... with error :
+   * Expecting:
+   *  &lt;$foo$&gt;
+   * to start with:
+   *  &lt;$bar$&gt;</code></pre>
+   *
+   * @param representation Describe/represent values in AssertJ error messages.
+   * @return this assertion object.
+   */
+  SELF withRepresentation(Representation representation);
+
+  /**
+   * Verifies that the actual object has the same hashCode as the given object.
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(42L).hasSameHashCodeAs(42L);
+   * assertThat(&quot;The Force&quot;).hasSameHashCodeAs(&quot;The Force&quot;);
+   * assertThat(new Jedi(&quot;Yoda&quot;, &quot;Blue&quot;)).hasSameHashCodeAs(new Jedi(&quot;Yoda&quot;, &quot;Blue&quot;));
+   *
+   * // assertions will fail
+   * assertThat(42L).hasSameHashCodeAs(2501L);
+   * assertThat(null).hasSameHashCodeAs(&quot;The Force&quot;);
+   * assertThat(&quot;The Force&quot;).hasSameHashCodeAs(null);</code></pre>
+   *
+   * @param other the object to check hashCode against.
+   *
+   * @return this assertion object.
+   *
+   * @throws AssertionError if the actual object is null.
+   * @throws NullPointerException if the other object is null.
+   * @throws AssertionError if the actual object has not the same hashCode as the given object.
+   *
+   * @since 2.9.0
+   */
+  SELF hasSameHashCodeAs(Object other);
 }

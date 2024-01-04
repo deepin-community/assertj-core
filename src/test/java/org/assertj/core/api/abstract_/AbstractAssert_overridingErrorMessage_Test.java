@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,18 +8,18 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api.abstract_;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.ConcreteAssert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -31,7 +31,7 @@ public class AbstractAssert_overridingErrorMessage_Test {
 
   private ConcreteAssert assertions;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     assertions = new ConcreteAssert(6L);
   }
@@ -43,48 +43,31 @@ public class AbstractAssert_overridingErrorMessage_Test {
 
   @Test
   public void should_fail_with_overridden_error_message() {
-    try {
-      assertions.overridingErrorMessage("new error message").isEqualTo(8L);
-    } catch (AssertionError err) {
-      assertThat(err.getMessage()).isEqualTo("new error message");
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> assertions.overridingErrorMessage("new error message").isEqualTo(8L))
+                                                   .withMessage("new error message");
   }
 
   @Test
   public void should_fail_with_overridden_error_message_not_interpreted_with_string_format_feature_as_no_args_are_given() {
-    try {
-      assertions.overridingErrorMessage("new error message with special character like (%)").isEqualTo(8L);
-    } catch (AssertionError err) {
-      assertThat(err.getMessage()).isEqualTo("new error message with special character like (%)");
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    // % has to be escaped as %% because expectAssertionError used String.format on the message
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> assertions.overridingErrorMessage("new error message with special character like (%)").isEqualTo(8L))
+                                                   .withMessage(format("new error message with special character like (%%)"));
   }
   
   @Test
   public void should_fail_with_overridden_error_message_interpreted_with_string_format_feature() {
-    try {
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() ->{
       long expected = 8L;
       assertions.overridingErrorMessage("new error message, expected value was : '%s'", expected).isEqualTo(expected);
-    } catch (AssertionError err) {
-      assertThat(err.getMessage()).isEqualTo("new error message, expected value was : '8'");
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    }).withMessage("new error message, expected value was : '8'");
   }
 
   @Test
   public void should_fail_with_description_and_overridden_error_message_using_string_format_feature() {
-    try {
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() ->{
       long expected = 8L;
       assertions.as("test").overridingErrorMessage("new error message, expected value was : '%s'", expected).isEqualTo(expected);
-    } catch (AssertionError err) {
-      assertThat(err.getMessage()).isEqualTo("[test] new error message, expected value was : '8'");
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    }).withMessage("[test] new error message, expected value was : '8'");
   }
 
   @Test

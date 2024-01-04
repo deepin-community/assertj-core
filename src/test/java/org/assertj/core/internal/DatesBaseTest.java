@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,21 +8,18 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
-import static org.assertj.core.test.ExpectedException.none;
 import static org.mockito.Mockito.spy;
 
 import java.util.Comparator;
 import java.util.Date;
 
-import org.assertj.core.test.ExpectedException;
 import org.assertj.core.util.DateUtil;
 import org.assertj.core.util.YearAndMonthComparator;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.BeforeEach;
 
 
 /**
@@ -34,8 +31,6 @@ import org.junit.Rule;
  */
 public abstract class DatesBaseTest {
 
-  @Rule
-  public ExpectedException thrown = none();
   protected Failures failures;
   protected Dates dates;
   protected ComparatorBasedComparisonStrategy yearAndMonthComparisonStrategy;
@@ -44,7 +39,7 @@ public abstract class DatesBaseTest {
 
   private YearAndMonthComparator yearAndMonthComparator = new YearAndMonthComparator();
 
-  @Before
+  @BeforeEach
   public void setUp() {
     failures = spy(new Failures());
     dates = new Dates();

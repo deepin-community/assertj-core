@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.test;
 
@@ -29,15 +29,15 @@ import org.assertj.core.description.TextDescription;
  */
 public final class TestData {
 
-  private static final AssertionInfo ASSERTION_INFO = new WritableAssertionInfo();
-  private static final AssertionInfo ASSERTION_INFO_AS_HEX = new WritableAssertionInfo();
+  private static final WritableAssertionInfo ASSERTION_INFO = new WritableAssertionInfo();
+  private static final WritableAssertionInfo ASSERTION_INFO_AS_HEX = new WritableAssertionInfo();
   private static final TextDescription DESCRIPTION = new TextDescription(
       "who's the more foolish: the fool, or the fool who follows him?");
   private static final Index INDEX = atIndex(0);
   private static final Pattern MATCH_ANYTHING = Pattern.compile(".*");
 
   static {
-    ((WritableAssertionInfo) ASSERTION_INFO_AS_HEX).useHexadecimalRepresentation();
+    ASSERTION_INFO_AS_HEX.useHexadecimalRepresentation();
   }
 
   public static Pattern matchAnything() {
@@ -48,7 +48,7 @@ public final class TestData {
     return INDEX;
   }
 
-  public static AssertionInfo someInfo() {
+  public static WritableAssertionInfo someInfo() {
     return ASSERTION_INFO;
   }
 

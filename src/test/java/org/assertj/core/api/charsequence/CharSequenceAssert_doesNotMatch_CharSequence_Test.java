@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api.charsequence;
 
@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 import org.assertj.core.api.CharSequenceAssert;
 import org.assertj.core.api.CharSequenceAssertBaseTest;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
 /**
  * Tests for <code>{@link CharSequenceAssert#doesNotMatch(Pattern)}</code>.
@@ -31,7 +31,7 @@ public class CharSequenceAssert_doesNotMatch_CharSequence_Test extends CharSeque
 
   private static Pattern pattern;
 
-  @BeforeClass
+  @BeforeAll
   public static void setUpOnce() {
     pattern = matchAnything();
   }

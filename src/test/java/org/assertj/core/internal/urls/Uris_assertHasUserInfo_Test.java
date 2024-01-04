@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.urls;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.error.uri.ShouldHaveUserInfo.shouldHaveUserInfo;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
@@ -19,34 +20,33 @@ import static org.assertj.core.util.FailureMessages.actualIsNull;
 import static org.mockito.Mockito.verify;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.UrisBaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class Uris_assertHasUserInfo_Test extends UrisBaseTest {
 
   @Test
-  public void should_pass_if_actual_uri_has_no_user_info_and_given_user_info_is_null() throws URISyntaxException {
-    uris.assertHasUserInfo(info, new URI("http://www.helloworld.org/index.html"), null);
+  public void should_pass_if_actual_uri_has_no_user_info_and_given_user_info_is_null() {
+    uris.assertHasUserInfo(info, URI.create("http://www.helloworld.org/index.html"), null);
   }
 
   @Test
-  public void should_pass_if_actual_uri_has_the_expected_user_info() throws URISyntaxException {
-    uris.assertHasUserInfo(info, new URI("http://test:pass@www.helloworld.org/index.html"), "test:pass");
+  public void should_pass_if_actual_uri_has_the_expected_user_info() {
+    uris.assertHasUserInfo(info, URI.create("http://test:pass@www.helloworld.org/index.html"), "test:pass");
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    uris.assertHasUserInfo(info, null, "http://test:pass@www.helloworld.org/index.html");
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> uris.assertHasUserInfo(info, null, "http://test:pass@www.helloworld.org/index.html"))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
-  public void should_fail_if_actual_URI_user_info_is_not_the_expected_user_info() throws URISyntaxException {
+  public void should_fail_if_actual_URI_user_info_is_not_the_expected_user_info() {
     AssertionInfo info = someInfo();
-    URI uri = new URI("http://test:pass@assertj.org/news");
+    URI uri = URI.create("http://test:pass@assertj.org/news");
     String expectedUserInfo = "test:ok";
     try {
       uris.assertHasUserInfo(info, uri, expectedUserInfo);
@@ -58,9 +58,9 @@ public class Uris_assertHasUserInfo_Test extends UrisBaseTest {
   }
 
   @Test
-  public void should_fail_if_actual_URI_has_no_user_info_and_expected_user_info_is_not_null() throws URISyntaxException {
+  public void should_fail_if_actual_URI_has_no_user_info_and_expected_user_info_is_not_null() {
     AssertionInfo info = someInfo();
-    URI uri = new URI("http://assertj.org/news");
+    URI uri = URI.create("http://assertj.org/news");
     String expectedUserInfo = "test:pass";
     try {
       uris.assertHasUserInfo(info, uri, expectedUserInfo);
@@ -72,9 +72,9 @@ public class Uris_assertHasUserInfo_Test extends UrisBaseTest {
   }
 
   @Test
-  public void should_fail_if_actual_URI_has_a_user_info_and_expected_user_info_is_null() throws URISyntaxException {
+  public void should_fail_if_actual_URI_has_a_user_info_and_expected_user_info_is_null() {
     AssertionInfo info = someInfo();
-    URI uri = new URI("http://test:pass@assertj.org");
+    URI uri = URI.create("http://test:pass@assertj.org");
     String expectedUserInfo = null;
     try {
       uris.assertHasUserInfo(info, uri, expectedUserInfo);

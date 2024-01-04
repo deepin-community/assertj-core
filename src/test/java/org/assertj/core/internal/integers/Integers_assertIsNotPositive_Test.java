@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,15 +8,17 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.integers;
 
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.test.TestData.someInfo;
 
 import org.assertj.core.internal.IntegersBaseTest;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -39,20 +41,20 @@ public class Integers_assertIsNotPositive_Test extends IntegersBaseTest {
 
   @Test
   public void should_fail_since_actual_is_positive() {
-    thrown.expectAssertionError("Expecting:%n <6>%nto be less than or equal to:%n <0>");
-    integers.assertIsNotPositive(someInfo(), 6);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> integers.assertIsNotPositive(someInfo(), 6))
+                                                   .withMessage(format("%nExpecting:%n <6>%nto be less than or equal to:%n <0> "));
   }
 
   @Test
   public void should_fail_since_actual_can_be_positive_according_to_custom_comparison_strategy() {
-    thrown.expectAssertionError("Expecting:%n <-1>%nto be less than or equal to:%n <0> when comparing values using 'AbsValueComparator'");
-    integersWithAbsValueComparisonStrategy.assertIsNotPositive(someInfo(), -1);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> integersWithAbsValueComparisonStrategy.assertIsNotPositive(someInfo(), -1))
+                                                   .withMessage(format("%nExpecting:%n <-1>%nto be less than or equal to:%n <0> when comparing values using AbsValueComparator"));
   }
 
   @Test
   public void should_fail_since_actual_is_positive_according_to_custom_comparison_strategy() {
-    thrown.expectAssertionError("Expecting:%n <1>%nto be less than or equal to:%n <0> when comparing values using 'AbsValueComparator'");
-    integersWithAbsValueComparisonStrategy.assertIsNotPositive(someInfo(), 1);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> integersWithAbsValueComparisonStrategy.assertIsNotPositive(someInfo(), 1))
+                                                   .withMessage(format("%nExpecting:%n <1>%nto be less than or equal to:%n <0> when comparing values using AbsValueComparator"));
   }
 
 }

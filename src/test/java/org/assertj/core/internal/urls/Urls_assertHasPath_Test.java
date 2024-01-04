@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.urls;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.error.uri.ShouldHavePath.shouldHavePath;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
@@ -23,7 +25,7 @@ import java.net.URL;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.UrlsBaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class Urls_assertHasPath_Test extends UrlsBaseTest {
 
@@ -35,14 +37,14 @@ public class Urls_assertHasPath_Test extends UrlsBaseTest {
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    urls.assertHasPath(info, null, "path");
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> urls.assertHasPath(info, null, "path"))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
-  public void should_throw_an_exception_fail_if_given_path_is_null() throws MalformedURLException {
-    thrown.expectIllegalArgumentException("Expecting given path not to be null");
-    urls.assertHasPath(info, new URL("http://example.com"), null);
+  public void should_throw_an_exception_fail_if_given_path_is_null() {
+    assertThatIllegalArgumentException().isThrownBy(() -> urls.assertHasPath(info, new URL("http://example.com"), null))
+                                        .withMessage("Expecting given path not to be null");
   }
 
   @Test

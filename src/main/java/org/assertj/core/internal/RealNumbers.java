@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,12 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
 import org.assertj.core.api.AssertionInfo;
-import org.assertj.core.data.Offset;
 
 /**
  * Base class of reusable assertions for real numbers (float and double).
@@ -54,14 +53,9 @@ public abstract class RealNumbers<NUMBER extends Number & Comparable<NUMBER>> ex
     assertNotEqualByComparison(info, actual, NaN());
   }
 
-  /**
-   * Returns true if the two floats parameter are equal within a positive offset, false otherwise.<br>
-   * It does not rely on the custom comparisonStrategy (if one is set) because using an offset is already a specific comparison
-   * strategy.
-   * @param actual the actual value.
-   * @param expected the expected value.
-   * @param offset the given positive offset.
-   * @return true if the two floats parameter are equal within a positive offset, false otherwise.
-   */
-  protected abstract boolean isEqualTo(NUMBER actual, NUMBER expected, Offset<?> offset);
+  @Override
+  protected boolean isGreaterThan(NUMBER value, NUMBER other) {
+    return value.compareTo(other) > 0;
+  }
+
 }

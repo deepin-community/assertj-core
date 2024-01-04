@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,20 +8,20 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.util.DateUtil.dayOfWeekOf;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.rules.ExpectedException.none;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
-import java.text.*;
-import java.util.*;
-
-import org.junit.*;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link DateUtil#dayOfWeekOf(Date)}</code>.
@@ -29,9 +29,6 @@ import org.junit.rules.ExpectedException;
  * @author Joel Costigliola
  */
 public class DateUtil_dayOfWeekOf_Test {
-
-  @Rule
-  public ExpectedException thrown = none();
 
   @Test
   public void should_return_day_of_month_of_date() throws ParseException {
@@ -42,8 +39,7 @@ public class DateUtil_dayOfWeekOf_Test {
 
   @Test
   public void should_throws_NullPointerException_if_date_parameter_is_null() {
-    thrown.expect(NullPointerException.class);
-    dayOfWeekOf(null);
+    assertThatNullPointerException().isThrownBy(() -> dayOfWeekOf(null));
   }
 
 }

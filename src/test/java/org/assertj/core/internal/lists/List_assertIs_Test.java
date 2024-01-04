@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,12 +8,14 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.lists;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
-
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.data.Index.atIndex;
 import static org.assertj.core.error.ShouldBeAtIndex.shouldBeAtIndex;
 import static org.assertj.core.test.TestData.someIndex;
@@ -33,12 +35,12 @@ import org.assertj.core.api.TestCondition;
 import org.assertj.core.data.Index;
 import org.assertj.core.internal.Lists;
 import org.assertj.core.internal.ListsBaseTest;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 
 /**
- * Tests for <code>{@link Lists#assertIs(AssertionInfo, List, org.assertj.core.core.Condition, Index)}</code> .
+ * Tests for <code>{@link Lists#assertIs(AssertionInfo, List, org.assertj.core.api.Condition, Index)}</code> .
  * 
  * @author Bo Gotthardt
  */
@@ -46,40 +48,42 @@ public class List_assertIs_Test extends ListsBaseTest {
   private static TestCondition<String> condition;
   private static List<String> actual = newArrayList("Yoda", "Luke", "Leia");
 
-  @BeforeClass
+  @BeforeAll
   public static void setUpOnce() {
     condition = new TestCondition<>();
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    lists.assertIs(someInfo(), null, condition, someIndex());
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> lists.assertIs(someInfo(), null, condition, someIndex()))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
   public void should_fail_if_actual_is_empty() {
-    thrown.expectAssertionError(actualIsEmpty());
-    List<String> empty = emptyList();
-    lists.assertIs(someInfo(), empty, condition, someIndex());
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() ->{
+      List<String> empty = emptyList();
+      lists.assertIs(someInfo(), empty, condition, someIndex());
+    }).withMessage(actualIsEmpty());
   }
 
   @Test
   public void should_throw_error_if_Index_is_null() {
-    thrown.expectNullPointerException("Index should not be null");
-    lists.assertIs(someInfo(), actual, condition, null);
+    assertThatNullPointerException().isThrownBy(() -> lists.assertIs(someInfo(), actual, condition, null))
+                                    .withMessage("Index should not be null");
   }
 
   @Test
   public void should_throw_error_if_Index_is_out_of_bounds() {
-    thrown.expectIndexOutOfBoundsException("Index should be between <0> and <2> (inclusive,) but was:%n <6>");
-    lists.assertIs(someInfo(), actual, condition, atIndex(6));
+    assertThatExceptionOfType(IndexOutOfBoundsException.class).isThrownBy(() -> lists.assertIs(someInfo(), actual,
+                                                                                               condition, atIndex(6)))
+                                                              .withMessageContaining(format("Index should be between <0> and <2> (inclusive) but was:%n <6>"));
   }
 
   @Test
   public void should_throw_error_if_Condition_is_null() {
-    thrown.expectNullPointerException("The condition to evaluate should not be null");
-    lists.assertIs(someInfo(), actual, null, someIndex());
+    assertThatNullPointerException().isThrownBy(() -> lists.assertIs(someInfo(), actual, null, someIndex()))
+                                    .withMessage("The condition to evaluate should not be null");
   }
 
   @Test
