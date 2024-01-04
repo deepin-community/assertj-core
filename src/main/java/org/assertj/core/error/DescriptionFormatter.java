@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.error;
 
@@ -42,7 +42,7 @@ public class DescriptionFormatter {
    * Formats the given <code>{@link Description}</code> by surrounding its text value with square brackets and adding a space at
    * the end.
    * @param d the description to format. It can be {@code null}.
-   * @return the formatted description, or an empty {@code String} if the the {@code Description} is {@code null}.
+   * @return the formatted description, or an empty {@code String} if the {@code Description} is {@code null}.
    */
   public String format(Description d) {
     String s = (d != null) ? d.value() : null;

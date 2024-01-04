@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,18 +8,17 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
+import static org.assertj.core.configuration.ConfigurationProvider.CONFIGURATION_PROVIDER;
 import static org.assertj.core.util.IterableUtil.isNullOrEmpty;
 
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
-
-import org.assertj.core.presentation.StandardRepresentation;
 
 /**
  * Implements {@link ComparisonStrategy} contract with a comparison strategy based on a {@link Comparator}.
@@ -28,21 +27,37 @@ import org.assertj.core.presentation.StandardRepresentation;
  */
 public class ComparatorBasedComparisonStrategy extends AbstractComparisonStrategy {
 
-  // stateless => can be shared
-  private static final StandardRepresentation STANDARD_REPRESENTATION = new StandardRepresentation();
+  static final int NOT_EQUAL = -1;
 
   // A raw type is necessary because we can't make assumptions on object to be compared.
   @SuppressWarnings("rawtypes")
   private final Comparator comparator;
 
+  // Comparator description used in assertion messages.
+  private final String comparatorDescription;
+
   /**
-   * Creates a new </code>{@link ComparatorBasedComparisonStrategy}</code> specifying the comparison strategy with given
+   * Creates a new <code>{@link ComparatorBasedComparisonStrategy}</code> specifying the comparison strategy with given
    * comparator.
    * 
    * @param comparator the comparison strategy to use.
    */
   public ComparatorBasedComparisonStrategy(@SuppressWarnings("rawtypes") Comparator comparator) {
-	this.comparator = comparator;
+    this(comparator, null);
+
+  }
+
+  /**
+   * Creates a new <code>{@link ComparatorBasedComparisonStrategy}</code> specifying the comparison strategy with given
+   * comparator and comparator description
+   *
+   * @param comparator the comparison strategy to use.
+   * @param comparatorDescription the comparator description to use in assertion messages.
+   */
+  public ComparatorBasedComparisonStrategy(@SuppressWarnings("rawtypes") Comparator comparator,
+                                           String comparatorDescription) {
+    this.comparator = comparator;
+    this.comparatorDescription = comparatorDescription;
   }
 
   /**
@@ -56,15 +71,15 @@ public class ComparatorBasedComparisonStrategy extends AbstractComparisonStrateg
   @Override
   @SuppressWarnings("unchecked")
   public boolean iterableContains(Iterable<?> iterable, Object value) {
-	if (isNullOrEmpty(iterable)) return false;
-	for (Object element : iterable) {
-	  // avoid comparison when objects are the same or both null
-	  if (element == value) return true;
-	  // both objects are not null => if one is then the other is not => compare next element with value
-	  if (value == null || element == null) continue;
-	  if (comparator.compare(element, value) == 0) return true;
-	}
-	return false;
+    if (isNullOrEmpty(iterable)) return false;
+    for (Object element : iterable) {
+      // avoid comparison when objects are the same or both null
+      if (element == value) return true;
+      // both objects are not null => if one is then the other is not => compare next element with value
+      if (value == null || element == null) continue;
+      if (comparator.compare(element, value) == 0) return true;
+    }
+    return false;
   }
 
   /**
@@ -78,13 +93,26 @@ public class ComparatorBasedComparisonStrategy extends AbstractComparisonStrateg
   @Override
   @SuppressWarnings("unchecked")
   public void iterableRemoves(Iterable<?> iterable, Object value) {
-	if (iterable == null) return;
-	Iterator<?> iterator = iterable.iterator();
-	while (iterator.hasNext()) {
-	  if (comparator.compare(iterator.next(), value) == 0) {
-		iterator.remove();
-	  }
-	}
+    if (iterable == null) return;
+    Iterator<?> iterator = iterable.iterator();
+    while (iterator.hasNext()) {
+      if (comparator.compare(iterator.next(), value) == 0) {
+        iterator.remove();
+      }
+    }
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public void iterablesRemoveFirst(Iterable<?> iterable, Object value) {
+    if (iterable == null) return;
+    Iterator<?> iterator = iterable.iterator();
+    while (iterator.hasNext()) {
+      if (comparator.compare(iterator.next(), value) == 0) {
+        iterator.remove();
+        return;
+      }
+    }
   }
 
   /**
@@ -98,11 +126,9 @@ public class ComparatorBasedComparisonStrategy extends AbstractComparisonStrateg
   @Override
   @SuppressWarnings("unchecked")
   public boolean areEqual(Object actual, Object other) {
-	if (actual == null) return other == null;
-	// actual is not null
-	if (other == null) return false;
-	// neither actual nor other are null
-	return comparator.compare(actual, other) == 0;
+    // we don't check actual or expected for null, this should be done by the comparator, the rationale being that a
+    // comparator might consider null to be equals to some special value (like blank String and null)
+    return comparator.compare(actual, other) == 0;
   }
 
   /**
@@ -115,65 +141,68 @@ public class ComparatorBasedComparisonStrategy extends AbstractComparisonStrateg
   // overridden to write javadoc.
   @Override
   public Iterable<?> duplicatesFrom(Iterable<?> iterable) {
-	return super.duplicatesFrom(iterable);
+    return super.duplicatesFrom(iterable);
   }
 
   @SuppressWarnings("unchecked")
   @Override
   protected Set<Object> newSetUsingComparisonStrategy() {
-	return new TreeSet<>(comparator);
+    return new TreeSet<>(comparator);
   }
 
   @Override
   public String asText() {
-	return "when comparing values using " + STANDARD_REPRESENTATION.toStringOf(comparator);
-	// return "according to " + this;
+    return "when comparing values using " + toString();
   }
 
   @Override
   public String toString() {
-	return STANDARD_REPRESENTATION.toStringOf(comparator);
+    return CONFIGURATION_PROVIDER.representation().toStringOf(this);
   }
 
   public Comparator<?> getComparator() {
-	return comparator;
+    return comparator;
+  }
+
+  public String getComparatorDescription() {
+    return comparatorDescription;
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public boolean stringStartsWith(String string, String prefix) {
-	if (string.length() < prefix.length()) return false;
-	String stringPrefix = string.substring(0, prefix.length());
-	return comparator.compare(stringPrefix, prefix) == 0;
+    if (string.length() < prefix.length()) return false;
+    String stringPrefix = string.substring(0, prefix.length());
+    return comparator.compare(stringPrefix, prefix) == 0;
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public boolean stringEndsWith(String string, String suffix) {
-	if (string.length() < suffix.length()) return false;
-	String stringSuffix = string.substring(string.length() - suffix.length());
-	return comparator.compare(stringSuffix, suffix) == 0;
+    if (string.length() < suffix.length()) return false;
+    String stringSuffix = string.substring(string.length() - suffix.length());
+    return comparator.compare(stringSuffix, suffix) == 0;
   }
 
   @Override
   public boolean stringContains(String string, String sequence) {
-	int sequenceLength = sequence.length();
-	for (int i = 0; i < string.length(); i++) {
-	  String subString = string.substring(i);
-	  if (subString.length() < sequenceLength) return false;
-	  if (stringStartsWith(subString, sequence)) return true;
-	}
-	return false;
+    int sequenceLength = sequence.length();
+    for (int i = 0; i < string.length(); i++) {
+      String subString = string.substring(i);
+      if (subString.length() < sequenceLength) return false;
+      if (stringStartsWith(subString, sequence)) return true;
+    }
+    return false;
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public boolean isGreaterThan(Object actual, Object other) {
-	return comparator.compare(actual, other) > 0;
+    return comparator.compare(actual, other) > 0;
   }
 
   @Override
   public boolean isStandard() {
-	return false;
+    return false;
   }
 }

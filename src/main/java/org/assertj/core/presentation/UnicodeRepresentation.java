@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.presentation;
 
@@ -19,8 +19,9 @@ import java.util.Formatter;
  *
  * @author Mariusz Smykula
  */
-public class UnicodeRepresentation implements Representation {
-
+public class UnicodeRepresentation extends StandardRepresentation {
+  
+  public static final UnicodeRepresentation UNICODE_REPRESENTATION = new UnicodeRepresentation();
 
   /**
    * Returns hexadecimal the {@code toString} representation of the given String or Character.
@@ -30,20 +31,23 @@ public class UnicodeRepresentation implements Representation {
    */
   @Override
   public String toStringOf(Object object) {
+    if (hasCustomFormatterFor(object)) return customFormat(object);
     if (object instanceof String) return toStringOf((String) object);
     if (object instanceof Character) return toStringOf((Character) object);
-    return DefaultToString.toStringOf(this, object);
+    return super.toStringOf(object);
   }
 
-  private String toStringOf(Character string) {
+  @Override
+  protected String toStringOf(Character string) {
     return escapeUnicode(string.toString());
   }
 
-  private String toStringOf(String string) {
+  @Override
+  protected String toStringOf(String string) {
     return escapeUnicode(string);
   }
 
-  private String escapeUnicode(String input) {
+  private static String escapeUnicode(String input) {
     StringBuilder b = new StringBuilder(input.length());
     Formatter formatter = new Formatter(b);
     for (char c : input.toCharArray()) {
@@ -56,5 +60,4 @@ public class UnicodeRepresentation implements Representation {
     formatter.close();
     return b.toString();
   }
-
 }

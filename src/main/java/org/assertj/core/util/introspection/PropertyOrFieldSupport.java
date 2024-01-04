@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,13 +8,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util.introspection;
 
 import static java.lang.String.format;
+import static org.assertj.core.util.Preconditions.checkArgument;
 
 import org.assertj.core.util.VisibleForTesting;
+
+import java.util.Map;
 
 public class PropertyOrFieldSupport {
   private static final String SEPARATOR = ".";
@@ -41,12 +44,9 @@ public class PropertyOrFieldSupport {
   }
 
   public Object getValueOf(String propertyOrFieldName, Object input) {
-    if (propertyOrFieldName == null)
-      throw new IllegalArgumentException("The name of the property/field to read should not be null");
-    if (propertyOrFieldName.isEmpty())
-      throw new IllegalArgumentException("The name of the property/field to read should not be empty");
-    if (input == null)
-      throw new IllegalArgumentException("The object to extract property/field from should not be null");
+    checkArgument(propertyOrFieldName != null, "The name of the property/field to read should not be null");
+    checkArgument(!propertyOrFieldName.isEmpty(), "The name of the property/field to read should not be empty");
+    checkArgument(input != null, "The object to extract property/field from should not be null");
 
     if (isNested(propertyOrFieldName)) {
       String firstPropertyName = popNameFrom(propertyOrFieldName);
@@ -56,11 +56,18 @@ public class PropertyOrFieldSupport {
       // extract next sub-property/field value until reaching the last sub-property/field
       return getValueOf(nextNameFrom(propertyOrFieldName), propertyOrFieldValue);
     }
+
     return getSimpleValue(propertyOrFieldName, input);
   }
 
-  private Object getSimpleValue(String propertyOrFieldName, Object input) {
-    // first try to get given property values from objects, then try fields
+  public Object getSimpleValue(String propertyOrFieldName, Object input) {
+    // first check if input object is a map
+    if (input instanceof Map) {
+      Map<?, ?> map = (Map<?, ?>) input;
+      return map.get(propertyOrFieldName);
+    }
+
+    // then try to get given property values from objects, then try fields
     try {
       return propertySupport.propertyValueOf(propertyOrFieldName, Object.class, input);
     } catch (IntrospectionError propertyIntrospectionError) {
@@ -76,7 +83,7 @@ public class PropertyOrFieldSupport {
                                 "- %s",
                                 propertyOrFieldName, propertyIntrospectionError.getMessage(),
                                 fieldIntrospectionError.getMessage());
-        throw new IntrospectionError(message);
+        throw new IntrospectionError(message, fieldIntrospectionError);
       }
     }
   }

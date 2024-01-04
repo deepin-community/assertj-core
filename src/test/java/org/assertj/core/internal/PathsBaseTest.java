@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,11 +8,10 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
-import static org.assertj.core.test.ExpectedException.none;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -23,11 +22,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
 import org.assertj.core.api.AssertionInfo;
-import org.assertj.core.test.ExpectedException;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.rules.ExternalResource;
+import org.junit.jupiter.api.BeforeEach;
 
 import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
 
@@ -59,8 +54,6 @@ import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
  */
 public abstract class PathsBaseTest {
 
-  @Rule
-  public ExpectedException thrown = none();
   protected Failures failures;
   protected Paths paths;
   protected NioFilesWrapper nioFilesWrapper;
@@ -69,7 +62,7 @@ public abstract class PathsBaseTest {
   protected Diff diff;
   protected BinaryDiff binaryDiff;
 
-  @Before
+  @BeforeEach
   public void setUp() {
 	failures = spy(new Failures());
 	nioFilesWrapper = mock(NioFilesWrapper.class);
@@ -84,13 +77,8 @@ public abstract class PathsBaseTest {
 
   /**
    * A {@link FileSystem} for test classes which need them
-   *
-   * <p>
-   * For test classes which do need a filesystem to test assertions and not only paths, declare a {@code static}
-   * instance field of this class as a {@link ClassRule} and initialize at declaration time.
-   * </p>
    */
-  public static class FileSystemResource extends ExternalResource {
+  public static class FileSystemResource {
 
 	private final FileSystem fs;
 
@@ -106,8 +94,7 @@ public abstract class PathsBaseTest {
 	  return fs;
 	}
 
-	@Override
-	protected void after() {
+	public void close() {
 	  try {
 		fs.close();
 	  } catch (IOException e) {

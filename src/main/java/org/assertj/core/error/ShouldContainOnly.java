@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,12 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.error;
 
-import static org.assertj.core.error.ShouldContainOnly.ErrorType.NOT_EXPECTED;
-import static org.assertj.core.error.ShouldContainOnly.ErrorType.NOT_FOUND;
+import static org.assertj.core.error.ShouldContainOnly.ErrorType.NOT_EXPECTED_ONLY;
+import static org.assertj.core.error.ShouldContainOnly.ErrorType.NOT_FOUND_ONLY;
 import static org.assertj.core.util.IterableUtil.isNullOrEmpty;
 
 import org.assertj.core.internal.ComparisonStrategy;
@@ -31,7 +31,7 @@ import org.assertj.core.internal.StandardComparisonStrategy;
 public class ShouldContainOnly extends BasicErrorMessageFactory {
 
   /**
-   * Creates a new </code>{@link ShouldContainOnly}</code>.
+   * Creates a new <code>{@link ShouldContainOnly}</code>.
    * 
    * @param actual the actual value in the failed assertion.
    * @param expected values expected to be contained in {@code actual}.
@@ -43,14 +43,14 @@ public class ShouldContainOnly extends BasicErrorMessageFactory {
   public static ErrorMessageFactory shouldContainOnly(Object actual, Object expected, Iterable<?> notFound,
                                                       Iterable<?> notExpected, ComparisonStrategy comparisonStrategy) {
     if (isNullOrEmpty(notExpected))
-      return new ShouldContainOnly(actual, expected, notFound, NOT_FOUND, comparisonStrategy);
+      return new ShouldContainOnly(actual, expected, notFound, NOT_FOUND_ONLY, comparisonStrategy);
     if (isNullOrEmpty(notFound))
-      return new ShouldContainOnly(actual, expected, notExpected, NOT_EXPECTED, comparisonStrategy);
+      return new ShouldContainOnly(actual, expected, notExpected, NOT_EXPECTED_ONLY, comparisonStrategy);
     return new ShouldContainOnly(actual, expected, notFound, notExpected, comparisonStrategy);
   }
 
   /**
-   * Creates a new </code>{@link ShouldContainOnly}</code>.
+   * Creates a new <code>{@link ShouldContainOnly}</code>.
    * 
    * @param actual the actual value in the failed assertion.
    * @param expected values expected to be contained in {@code actual}.
@@ -84,7 +84,7 @@ public class ShouldContainOnly extends BasicErrorMessageFactory {
           "Expecting:%n" +
           "  <%s>%n" +
           "to contain only:%n" +
-          "  <%s>%n" + (errorType == NOT_FOUND ? 
+          "  <%s>%n" + (errorType == NOT_FOUND_ONLY ?
           "but could not find the following elements:%n" : "but the following elements were unexpected:%n") +
           "  <%s>%n%s",
           actual, expected, notFoundOrNotExpected, comparisonStrategy);
@@ -92,7 +92,7 @@ public class ShouldContainOnly extends BasicErrorMessageFactory {
   }
 
   public enum ErrorType {
-    NOT_FOUND, NOT_EXPECTED
+    NOT_FOUND_ONLY, NOT_EXPECTED_ONLY
   }
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.shortarrays;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldBeSorted.shouldBeSortedAccordingToGivenComparator;
 import static org.assertj.core.test.ShortArrays.emptyArray;
 import static org.assertj.core.test.TestData.someInfo;
@@ -26,8 +28,8 @@ import java.util.Comparator;
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.ShortArrays;
 import org.assertj.core.internal.ShortArraysBaseTest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -41,22 +43,12 @@ public class ShortArrays_assertIsSortedAccordingToComparator_Test extends ShortA
   private Comparator<Short> shortAscendingOrderComparator;
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() {
     super.setUp();
     actual = new short[] { 4, 3, 2, 2, 1 };
-    shortDescendingOrderComparator = new Comparator<Short>() {
-      @Override
-      public int compare(Short short1, Short short2) {
-        return -short1.compareTo(short2);
-      }
-    };
-    shortAscendingOrderComparator = new Comparator<Short>() {
-      @Override
-      public int compare(Short short1, Short short2) {
-        return -short1.compareTo(short2);
-      }
-    };
+    shortDescendingOrderComparator =  (short1, short2) -> -short1.compareTo(short2);
+    shortAscendingOrderComparator = (short1, short2) -> short1.compareTo(short2);
   }
 
   @Test
@@ -72,14 +64,13 @@ public class ShortArrays_assertIsSortedAccordingToComparator_Test extends ShortA
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    arrays.assertIsSortedAccordingToComparator(someInfo(), null, shortDescendingOrderComparator);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arrays.assertIsSortedAccordingToComparator(someInfo(), null, shortDescendingOrderComparator))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
   public void should_fail_if_comparator_is_null() {
-    thrown.expect(NullPointerException.class);
-    arrays.assertIsSortedAccordingToComparator(someInfo(), emptyArray(), null);
+    assertThatNullPointerException().isThrownBy(() -> arrays.assertIsSortedAccordingToComparator(someInfo(), emptyArray(), null));
   }
 
   @Test

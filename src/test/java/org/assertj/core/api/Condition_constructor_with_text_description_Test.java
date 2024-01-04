@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,17 +8,13 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.test.ErrorMessages.descriptionIsNull;
-import static org.assertj.core.test.ExpectedException.none;
 
-import org.assertj.core.test.ExpectedException;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link Condition#Condition(String)}</code>.
@@ -27,9 +23,6 @@ import org.junit.Test;
  * @author Alex Ruiz
  */
 public class Condition_constructor_with_text_description_Test {
-
-  @Rule
-  public ExpectedException thrown = none();
 
   @Test
   public void should_set_description() {
@@ -43,15 +36,14 @@ public class Condition_constructor_with_text_description_Test {
     assertThat(condition.description.value()).isEqualTo(text);
   }
 
-  @SuppressWarnings("unused")
   @Test
-  public void should_throw_error_if_description_is_null() {
-    thrown.expectNullPointerException(descriptionIsNull());
-    new Condition<Object>((String) null) {
+  public void should_set_empty_description_if_description_is_null() {
+    Condition<Object> condition = new Condition<Object>((String) null) {
       @Override
       public boolean matches(Object value) {
         return false;
       }
     };
+    assertThat(condition.description.value()).isEmpty();
   }
 }

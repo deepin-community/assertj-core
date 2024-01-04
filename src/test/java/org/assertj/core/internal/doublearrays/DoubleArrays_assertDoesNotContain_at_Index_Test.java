@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,25 +8,24 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.doublearrays;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.data.Index.atIndex;
 import static org.assertj.core.error.ShouldNotContainAtIndex.shouldNotContainAtIndex;
 import static org.assertj.core.test.DoubleArrays.emptyArray;
-import static org.assertj.core.test.TestData.*;
-import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
+import static org.assertj.core.test.TestData.someIndex;
+import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
-
-
-import static org.mockito.Mockito.verify;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.data.Index;
 import org.assertj.core.internal.DoubleArrays;
 import org.assertj.core.internal.DoubleArraysBaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -39,8 +38,8 @@ public class DoubleArrays_assertDoesNotContain_at_Index_Test extends DoubleArray
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    arrays.assertDoesNotContain(someInfo(), null, 8d, someIndex());
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arrays.assertDoesNotContain(someInfo(), null, 8d, someIndex()))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
@@ -55,8 +54,8 @@ public class DoubleArrays_assertDoesNotContain_at_Index_Test extends DoubleArray
 
   @Test
   public void should_throw_error_if_Index_is_null() {
-    thrown.expectNullPointerException("Index should not be null");
-    arrays.assertDoesNotContain(someInfo(), actual, 8d, null);
+    assertThatNullPointerException().isThrownBy(() -> arrays.assertDoesNotContain(someInfo(), actual, 8d, null))
+                                    .withMessage("Index should not be null");
   }
 
   @Test
@@ -66,21 +65,15 @@ public class DoubleArrays_assertDoesNotContain_at_Index_Test extends DoubleArray
 
   @Test
   public void should_fail_if_actual_contains_value_at_index() {
-    AssertionInfo info = someInfo();
     Index index = atIndex(0);
-    try {
-      arrays.assertDoesNotContain(info, actual, 6d, index);
-    } catch (AssertionError e) {
-      verify(failures).failure(info, shouldNotContainAtIndex(actual, 6d, index));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arrays.assertDoesNotContain(someInfo(), actual, 6d, index))
+                                                   .withMessage(shouldNotContainAtIndex(actual, 6d, index).create());
   }
 
   @Test
   public void should_fail_if_actual_is_null_whatever_custom_comparison_strategy_is() {
-    thrown.expectAssertionError(actualIsNull());
-    arraysWithCustomComparisonStrategy.assertDoesNotContain(someInfo(), null, -8d, someIndex());
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arraysWithCustomComparisonStrategy.assertDoesNotContain(someInfo(), null, -8d, someIndex()))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
@@ -95,8 +88,11 @@ public class DoubleArrays_assertDoesNotContain_at_Index_Test extends DoubleArray
 
   @Test
   public void should_throw_error_if_Index_is_null_whatever_custom_comparison_strategy_is() {
-    thrown.expectNullPointerException("Index should not be null");
-    arraysWithCustomComparisonStrategy.assertDoesNotContain(someInfo(), actual, -8d, null);
+    assertThatNullPointerException().isThrownBy(() -> arraysWithCustomComparisonStrategy.assertDoesNotContain(someInfo(),
+                                                                                                              actual,
+                                                                                                              -8d,
+                                                                                                              null))
+                                    .withMessage("Index should not be null");
   }
 
   @Test
@@ -106,14 +102,8 @@ public class DoubleArrays_assertDoesNotContain_at_Index_Test extends DoubleArray
 
   @Test
   public void should_fail_if_actual_contains_value_at_index_according_to_custom_comparison_strategy() {
-    AssertionInfo info = someInfo();
     Index index = atIndex(0);
-    try {
-      arraysWithCustomComparisonStrategy.assertDoesNotContain(info, actual, 6d, index);
-    } catch (AssertionError e) {
-      verify(failures).failure(info, shouldNotContainAtIndex(actual, 6d, index, absValueComparisonStrategy));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arraysWithCustomComparisonStrategy.assertDoesNotContain(someInfo(), actual, 6d, index))
+                                                   .withMessage(shouldNotContainAtIndex(actual, 6d, index, absValueComparisonStrategy).create());
   }
 }

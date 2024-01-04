@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.extractor;
 
@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.assertj.core.test.Employee;
 import org.assertj.core.test.Name;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 public class ToStringExtractorTest {
@@ -24,10 +24,10 @@ public class ToStringExtractorTest {
   private ToStringExtractor toStringExtractor = new ToStringExtractor();
   
   @Test
-  public void should_extract_toString() throws Exception {
-    Employee someEmloyee = new Employee(1, new Name("John Doe"), 28);
+  public void should_extract_toString() {
+    Employee someEmployee = new Employee(1, new Name("John Doe"), 28);
     
-    String result = toStringExtractor.extract(someEmloyee);
+    String result = toStringExtractor.apply(someEmployee);
     
     assertThat(result).isEqualTo("Employee[id=1, name=Name[first='John Doe', last='null'], age=28]");
   }

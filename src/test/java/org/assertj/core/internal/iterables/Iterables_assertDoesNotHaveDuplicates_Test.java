@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,13 +8,14 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.iterables;
 
 import static java.util.Collections.emptyList;
-
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.error.ShouldNotHaveDuplicates.shouldNotHaveDuplicates;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
@@ -22,19 +23,17 @@ import static org.assertj.core.util.Arrays.array;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.assertj.core.util.Sets.newLinkedHashSet;
-
 import static org.mockito.Mockito.verify;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-
-import org.junit.Test;
+import java.util.stream.Stream;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.Iterables;
 import org.assertj.core.internal.IterablesBaseTest;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link Iterables#assertDoesNotHaveDuplicates(AssertionInfo, Collection)}</code>.
@@ -59,8 +58,8 @@ public class Iterables_assertDoesNotHaveDuplicates_Test extends IterablesBaseTes
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    iterables.assertDoesNotHaveDuplicates(someInfo(), null);
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> iterables.assertDoesNotHaveDuplicates(someInfo(), null))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
@@ -79,10 +78,7 @@ public class Iterables_assertDoesNotHaveDuplicates_Test extends IterablesBaseTes
 
   @Test
   public void should_pass_within_time_constraints() {
-    List<String> generated = new ArrayList<>(GENERATED_OBJECTS_NUMBER);
-    for (int count = 0; count < GENERATED_OBJECTS_NUMBER; count++) {
-      generated.add(UUID.randomUUID().toString());
-    }
+    List<UUID> generated = Stream.generate(UUID::randomUUID).limit(GENERATED_OBJECTS_NUMBER).collect(toList());
 
     long time = System.currentTimeMillis();
     iterables.assertDoesNotHaveDuplicates(someInfo(), generated);
@@ -133,11 +129,7 @@ public class Iterables_assertDoesNotHaveDuplicates_Test extends IterablesBaseTes
   
   @Test
   public void should_pass_within_time_constraints_with_custom_comparison_strategy() {
-    List<String> generated = new ArrayList<>(GENERATED_OBJECTS_NUMBER);
-    for (int count = 0; count < GENERATED_OBJECTS_NUMBER; count++) {
-      generated.add(UUID.randomUUID().toString());
-    }
-
+    List<String> generated = Stream.generate(() -> UUID.randomUUID().toString()).limit(GENERATED_OBJECTS_NUMBER).collect(toList());
     long time = System.currentTimeMillis();
     iterablesWithCaseInsensitiveComparisonStrategy.assertDoesNotHaveDuplicates(someInfo(), generated);
     // check that it takes less than 10 seconds, usually it takes 1000ms on an average computer

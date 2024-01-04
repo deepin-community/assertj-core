@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,23 +8,28 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
 import static java.lang.Math.abs;
-import static org.assertj.core.data.Offset.offset;
+import static org.assertj.core.error.ShouldBeEqualWithinOffset.shouldBeEqual;
 import static org.assertj.core.error.ShouldBeEqualWithinPercentage.shouldBeEqualWithinPercentage;
+import static org.assertj.core.error.ShouldNotBeEqualWithinOffset.shouldNotBeEqual;
+import static org.assertj.core.error.ShouldNotBeEqualWithinPercentage.shouldNotBeEqualWithinPercentage;
 import static org.assertj.core.internal.CommonValidations.checkNumberIsNotNull;
+import static org.assertj.core.internal.CommonValidations.checkOffsetIsNotNull;
 import static org.assertj.core.internal.CommonValidations.checkPercentageIsNotNull;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.data.Offset;
 import org.assertj.core.data.Percentage;
+import org.assertj.core.util.Objects;
 
 /**
  * Base class of reusable assertions for numbers.
  * 
+ * @author Drummond Dawson
  * @author Joel Costigliola
  * @author Nicolas François
  */
@@ -39,6 +44,8 @@ public abstract class Numbers<NUMBER extends Number & Comparable<NUMBER>> extend
   }
 
   protected abstract NUMBER zero();
+
+  protected abstract NUMBER one();
 
   /**
    * Asserts that the actual value is equal to zero.<br>
@@ -64,6 +71,19 @@ public abstract class Numbers<NUMBER extends Number & Comparable<NUMBER>> extend
    */
   public void assertIsNotZero(AssertionInfo info, NUMBER actual) {
     assertNotEqualByComparison(info, actual, zero());
+  }
+
+  /**
+   * Asserts that the actual value is equal to one.<br>
+   * It does not rely on the custom comparisonStrategy (if one is set).
+   *
+   * @param info contains information about the assertion.
+   * @param actual the actual value.
+   * @throws AssertionError if the actual value is {@code null}.
+   * @throws AssertionError if the actual value is not equal to one.
+   */
+  public void assertIsOne(AssertionInfo info, NUMBER actual) {
+    assertEqualByComparison(info, actual, one());
   }
 
   /**
@@ -119,6 +139,8 @@ public abstract class Numbers<NUMBER extends Number & Comparable<NUMBER>> extend
    * 
    * @param info contains information about the assertion.
    * @param actual the actual value.
+   * @param start range start value
+   * @param end range end value
    * @throws AssertionError if the actual value is {@code null}.
    * @throws AssertionError if the actual value is positive.
    * @throws NullPointerException if start value is {@code null}.
@@ -146,15 +168,53 @@ public abstract class Numbers<NUMBER extends Number & Comparable<NUMBER>> extend
   }
 
   /**
-   * Asserts that the actual value is close to the offset.
+   * Asserts that the actual value is close to the expected one by less than the given offset.
+   * <p>
+   * It does not rely on the custom comparisonStrategy (if one is set) because using an offset is already a specific
+   * comparison strategy.
    *
    * @param info contains information about the assertion.
    * @param actual the actual value.
-   * @param other the expected value.
+   * @param expected the value to compare actual too.
    * @param offset the given positive offset.
    */
-  public abstract void assertIsCloseTo(final AssertionInfo info, final NUMBER actual, final NUMBER other,
-                                       final Offset<NUMBER> offset);
+  public void assertIsCloseTo(final AssertionInfo info, final NUMBER actual, final NUMBER expected,
+                              final Offset<NUMBER> offset) {
+    assertNotNull(info, actual);
+    checkOffsetIsNotNull(offset);
+    checkNumberIsNotNull(expected);
+
+    if (areEqual(actual, expected)) return; // handles correctly NaN comparison
+    if (!offset.strict && isGreaterThan(absDiff(actual, expected), offset.value))
+      throw failures.failure(info, shouldBeEqual(actual, expected, offset, absDiff(actual, expected)));
+    if (offset.strict && isGreaterThanOrEqualTo(absDiff(actual, expected), offset.value))
+      throw failures.failure(info, shouldBeEqual(actual, expected, offset, absDiff(actual, expected)));
+  }
+
+  /**
+   * Asserts that the actual value is not close to the expected one by less than the given offset.
+   *
+   * @param info contains information about the assertion.
+   * @param actual the actual value.
+   * @param expected the value to compare actual too.
+   * @param offset the given positive offset.
+   */
+  public void assertIsNotCloseTo(final AssertionInfo info, final NUMBER actual, final NUMBER expected,
+                                 final Offset<NUMBER> offset) {
+    assertNotNull(info, actual);
+    checkOffsetIsNotNull(offset);
+    checkNumberIsNotNull(expected);
+
+    NUMBER diff = absDiff(actual, expected);
+
+    // with strict offset and actual == other => too close !
+    if (offset.strict && isGreaterThanOrEqualTo(diff, offset.value)) return;
+    // with non strict offset and actual == other => too close !
+    if (!offset.strict && !areEqual(actual, expected)) {
+      if (isGreaterThan(diff, offset.value)) return;
+    }
+    throw failures.failure(info, shouldNotBeEqual(actual, expected, offset, diff));
+  }
 
   /**
    * Asserts that the actual value is close to the an offset expressed as an percentage value.
@@ -162,29 +222,52 @@ public abstract class Numbers<NUMBER extends Number & Comparable<NUMBER>> extend
    * @param info contains information about the assertion.
    * @param actual the actual value.
    * @param other the expected value.
-   * @param percentage the given percentage between 0 and 100.
+   * @param percentage the given positive percentage.
    */
   public void assertIsCloseToPercentage(final AssertionInfo info, final NUMBER actual, final NUMBER other,
                                         final Percentage percentage) {
-    isCloseToPercentageCommonChecks(info, actual, other, percentage);
-    Offset<Double> offset = computeOffset(other, percentage);
-    double absDiff = absDiff(actual, other);
-    if (absDiff > offset.value)
-      throw failures.failure(info, shouldBeEqualWithinPercentage(actual, other, percentage, absDiff));
-  }
-
-  protected void isCloseToPercentageCommonChecks(AssertionInfo info, NUMBER actual, NUMBER other, Percentage percentage) {
     assertNotNull(info, actual);
     checkPercentageIsNotNull(percentage);
     checkNumberIsNotNull(other);
+
+    if (areEqual(actual, other)) return;
+    double acceptableDiff = abs(percentage.value * other.doubleValue() / 100d);
+    double actualDiff = absDiff(actual, other).doubleValue();
+    if (actualDiff > acceptableDiff || Double.isNaN(actualDiff) || Double.isInfinite(actualDiff))
+      throw failures.failure(info, shouldBeEqualWithinPercentage(actual, other, percentage, absDiff(actual, other)));
   }
 
-  protected double absDiff(NUMBER actual, NUMBER expected) {
-    return abs(expected.doubleValue() - actual.doubleValue());
+  /**
+   * Asserts that the actual value is not close to the an offset expressed as an percentage value.
+   *
+   * @param info contains information about the assertion.
+   * @param actual the actual value.
+   * @param other the expected value.
+   * @param percentage the given positive percentage.
+   */
+  public void assertIsNotCloseToPercentage(final AssertionInfo info, final NUMBER actual, final NUMBER other,
+                                           final Percentage percentage) {
+    assertNotNull(info, actual);
+    checkPercentageIsNotNull(percentage);
+    checkNumberIsNotNull(other);
+
+    double diff = abs(percentage.value * other.doubleValue() / 100d);
+    boolean areEqual = areEqual(actual, other);
+    if (!areEqual && Double.isInfinite(diff)) return;
+    if (absDiff(actual, other).doubleValue() <= diff || areEqual)
+      throw failures.failure(info, shouldNotBeEqualWithinPercentage(actual, other, percentage, absDiff(actual, other)));
   }
 
-  private Offset<Double> computeOffset(NUMBER referenceValue, Percentage percentage) {
-    return offset(percentage.value * referenceValue.doubleValue() / 100d);
+  protected abstract NUMBER absDiff(final NUMBER actual, final NUMBER other);
+
+  protected abstract boolean isGreaterThan(final NUMBER value, final NUMBER other);
+
+  protected boolean isGreaterThanOrEqualTo(final NUMBER value, final NUMBER other) {
+    return areEqual(value, other) || isGreaterThan(value, other);
+  }
+
+  protected boolean areEqual(final NUMBER value, final NUMBER other) {
+    return Objects.areEqual(value, other);
   }
 
 }

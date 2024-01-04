@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,13 +8,15 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.booleanarrays;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldContainSequence.shouldContainSequence;
+import static org.assertj.core.internal.ErrorMessages.*;
 import static org.assertj.core.test.BooleanArrays.*;
-import static org.assertj.core.test.ErrorMessages.*;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
@@ -25,8 +27,8 @@ import static org.mockito.Mockito.verify;
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.BooleanArrays;
 import org.assertj.core.internal.BooleanArraysBaseTest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -38,7 +40,7 @@ import org.junit.Test;
 public class BooleanArrays_assertContainsSequence_Test extends BooleanArraysBaseTest {
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() {
     super.setUp();
     actual = arrayOf(true, false, false, true);
@@ -46,14 +48,15 @@ public class BooleanArrays_assertContainsSequence_Test extends BooleanArraysBase
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    arrays.assertContainsSequence(someInfo(), null, arrayOf(true));
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arrays.assertContainsSequence(someInfo(), null, arrayOf(true)))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
   public void should_throw_error_if_sequence_is_null() {
-    thrown.expectNullPointerException(valuesToLookForIsNull());
-    arrays.assertContainsSequence(someInfo(), actual, null);
+    assertThatNullPointerException().isThrownBy(() -> arrays.assertContainsSequence(someInfo(),
+                                                                                    actual, null))
+                                    .withMessage(valuesToLookForIsNull());
   }
 
   @Test
@@ -64,8 +67,7 @@ public class BooleanArrays_assertContainsSequence_Test extends BooleanArraysBase
   
   @Test
   public void should_fail_if_array_of_values_to_look_for_is_empty_and_actual_is_not() {
-    thrown.expect(AssertionError.class);
-    arrays.assertContainsSequence(someInfo(), actual, emptyArray());
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arrays.assertContainsSequence(someInfo(), actual, emptyArray()));
   }
 
   @Test

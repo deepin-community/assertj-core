@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,27 +8,27 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.strings;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldContainPattern.shouldContainPattern;
-import static org.assertj.core.test.ErrorMessages.regexPatternIsNull;
+import static org.assertj.core.internal.ErrorMessages.regexPatternIsNull;
 import static org.assertj.core.test.TestData.matchAnything;
 import static org.assertj.core.test.TestData.someInfo;
-import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
-import static org.mockito.Mockito.verify;
 
 import java.util.regex.PatternSyntaxException;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.Strings;
 import org.assertj.core.internal.StringsBaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
- * Tests for <code>{@link Strings#assertMatches(AssertionInfo, CharSequence, CharSequence)}</code>.
+ * Tests for <code>{@link Strings#assertContainsPattern(AssertionInfo, CharSequence, CharSequence)}</code>.
  * 
  * @author Pierre Templier
  */
@@ -39,33 +39,29 @@ public class Strings_assertContainsPattern_CharSequence_Test extends StringsBase
 
   @Test
   public void should_throw_error_if_regular_expression_is_null() {
-    thrown.expectNullPointerException(regexPatternIsNull());
-    String regex = null;
-    strings.assertContainsPattern(someInfo(), actual, regex);
+    assertThatNullPointerException().isThrownBy(() -> {
+      String regex = null;
+      strings.assertContainsPattern(someInfo(), actual, regex);
+    }).withMessage(regexPatternIsNull());
   }
 
   @Test
   public void should_throw_error_if_syntax_of_regular_expression_is_invalid() {
-    thrown.expect(PatternSyntaxException.class);
-    strings.assertContainsPattern(someInfo(), actual, "*...");
+    assertThatExceptionOfType(PatternSyntaxException.class).isThrownBy(() -> strings.assertContainsPattern(someInfo(),
+                                                                                                           actual,
+                                                                                                           "*..."));
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    strings.assertContainsPattern(someInfo(), null, matchAnything().pattern());
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> strings.assertContainsPattern(someInfo(), null, matchAnything().pattern()))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
   public void should_fail_if_actual_does_not_contain_regular_expression() {
-    AssertionInfo info = someInfo();
-    try {
-      strings.assertContainsPattern(info, actual, "Luke");
-    } catch (AssertionError e) {
-      verify(failures).failure(info, shouldContainPattern(actual, "Luke"));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> strings.assertContainsPattern(someInfo(), actual, "Luke"))
+                                                   .withMessage(shouldContainPattern(actual, "Luke").create());
   }
 
   @Test
@@ -75,33 +71,29 @@ public class Strings_assertContainsPattern_CharSequence_Test extends StringsBase
 
   @Test
   public void should_throw_error_if_regular_expression_is_null_whatever_custom_comparison_strategy_is() {
-    thrown.expectNullPointerException(regexPatternIsNull());
-    String regex = null;
-    stringsWithCaseInsensitiveComparisonStrategy.assertContainsPattern(someInfo(), actual, regex);
+    assertThatNullPointerException().isThrownBy(() -> {
+      String regex = null;
+      stringsWithCaseInsensitiveComparisonStrategy.assertContainsPattern(someInfo(), actual, regex);
+    }).withMessage(regexPatternIsNull());
   }
 
   @Test
   public void should_throw_error_if_syntax_of_regular_expression_is_invalid_whatever_custom_comparison_strategy_is() {
-    thrown.expect(PatternSyntaxException.class);
-    stringsWithCaseInsensitiveComparisonStrategy.assertContainsPattern(someInfo(), actual, "*...");
+    assertThatExceptionOfType(PatternSyntaxException.class).isThrownBy(() -> stringsWithCaseInsensitiveComparisonStrategy.assertContainsPattern(someInfo(),
+                                                                                                                                                actual,
+                                                                                                                                                "*..."));
   }
 
   @Test
   public void should_fail_if_actual_is_null_whatever_custom_comparison_strategy_is() {
-    thrown.expectAssertionError(actualIsNull());
-    stringsWithCaseInsensitiveComparisonStrategy.assertContainsPattern(someInfo(), null, matchAnything().pattern());
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> stringsWithCaseInsensitiveComparisonStrategy.assertContainsPattern(someInfo(), null, matchAnything().pattern()))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
   public void should_fail_if_actual_does_not_contain_regular_expression_whatever_custom_comparison_strategy_is() {
-    AssertionInfo info = someInfo();
-    try {
-      stringsWithCaseInsensitiveComparisonStrategy.assertContainsPattern(info, actual, "Luke");
-    } catch (AssertionError e) {
-      verify(failures).failure(info, shouldContainPattern(actual, "Luke"));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> stringsWithCaseInsensitiveComparisonStrategy.assertContainsPattern(someInfo(), actual, "Luke"))
+                                                   .withMessage(shouldContainPattern(actual, "Luke").create());
   }
 
   @Test

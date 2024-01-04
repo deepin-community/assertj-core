@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,10 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.urls;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.error.uri.ShouldHaveAnchor.shouldHaveAnchor;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
@@ -23,7 +24,7 @@ import java.net.URL;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.UrlsBaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class Urls_assertHasAnchor_Test extends UrlsBaseTest {
 
@@ -40,8 +41,8 @@ public class Urls_assertHasAnchor_Test extends UrlsBaseTest {
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    urls.assertHasAnchor(info, null, "http://www.helloworld.org/index.html#print");
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> urls.assertHasAnchor(info, null, "http://www.helloworld.org/index.html#print"))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
@@ -87,8 +88,9 @@ public class Urls_assertHasAnchor_Test extends UrlsBaseTest {
   }
 
   @Test
-  public void should_throw_error_if_actual_url_has_no_anchor() throws MalformedURLException {
-    thrown.expectNullPointerException(null);
-    urls.assertHasAnchor(info, new URL("http://www.helloworld.org/index.html"), "print");
+  public void should_throw_error_if_actual_url_has_no_anchor() {
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> urls.assertHasAnchor(info,
+                                                                                                new URL("http://www.helloworld.org/index.html"),
+                                                                                                "print"));
   }
 }

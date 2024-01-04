@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api;
 
@@ -18,8 +18,8 @@ import java.util.Date;
 
 import org.assertj.core.internal.Dates;
 import org.assertj.core.internal.Objects;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * 
@@ -34,7 +34,7 @@ public abstract class DateAssertBaseTest {
   protected Dates dates;
   protected Objects objects;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     dates = mock(Dates.class);
     objects = mock(Objects.class);
@@ -43,7 +43,7 @@ public abstract class DateAssertBaseTest {
     assertions.objects = objects;
   }
 
-  @After
+  @AfterEach
   public void tearDown() {
     AbstractDateAssert.useDefaultDateFormatsOnly();
   }

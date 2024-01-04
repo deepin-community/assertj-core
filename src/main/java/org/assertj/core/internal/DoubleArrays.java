@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,16 +8,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
-
-import java.util.Comparator;
 
 import org.assertj.core.api.ArraySortedAssert;
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.data.Index;
 import org.assertj.core.util.VisibleForTesting;
+
+import java.util.Comparator;
 
 /**
  * Reusable assertions for arrays of {@code double}s.
@@ -50,7 +50,12 @@ public class DoubleArrays {
   }
 
   public DoubleArrays(ComparisonStrategy comparisonStrategy) {
-    this.arrays = new Arrays(comparisonStrategy);
+    setArrays(new Arrays(comparisonStrategy));
+  }
+
+  @VisibleForTesting
+  public void setArrays(Arrays arrays) {
+    this.arrays = arrays;
   }
 
   @VisibleForTesting
@@ -103,7 +108,73 @@ public class DoubleArrays {
    * @throws AssertionError if the number of elements in the given array is different than the expected one.
    */
   public void assertHasSize(AssertionInfo info, double[] actual, int expectedSize) {
-    arrays.assertHasSize(info, failures, actual, expectedSize);
+    arrays.assertHasSize(info, actual, expectedSize);
+  }
+
+  /**
+   * Asserts that the number of elements in the given array is greater than the given boundary.
+   *
+   * @param info contains information about the assertion.
+   * @param actual the given array.
+   * @param boundary  the given value to compare the size of {@code actual} to.
+   * @throws AssertionError if the given array is {@code null}.
+   * @throws AssertionError if the number of elements in the given array is not greater than the boundary.
+   */
+  public void assertHasSizeGreaterThan(AssertionInfo info, double[] actual, int boundary) {
+    arrays.assertHasSizeGreaterThan(info, actual, boundary);
+  }
+
+  /**
+   * Asserts that the number of elements in the given array is greater than or equal to the given boundary.
+   *
+   * @param info contains information about the assertion.
+   * @param actual the given array.
+   * @param boundary  the given value to compare the size of {@code actual} to.
+   * @throws AssertionError if the given array is {@code null}.
+   * @throws AssertionError if the number of elements in the given array is not greater than or equal to the boundary.
+   */
+  public void assertHasSizeGreaterThanOrEqualTo(AssertionInfo info, double[] actual, int boundary) {
+    arrays.assertHasSizeGreaterThanOrEqualTo(info, actual, boundary);
+  }
+
+  /**
+   * Asserts that the number of elements in the given array is less than the given boundary.
+   *
+   * @param info contains information about the assertion.
+   * @param actual the given array.
+   * @param boundary  the given value to compare the size of {@code actual} to.
+   * @throws AssertionError if the given array is {@code null}.
+   * @throws AssertionError if the number of elements in the given array is not less than the boundary.
+   */
+  public void assertHasSizeLessThan(AssertionInfo info, double[] actual, int boundary) {
+    arrays.assertHasSizeLessThan(info, actual, boundary);
+  }
+
+  /**
+   * Asserts that the number of elements in the given array is less than or equal to the given boundary.
+   *
+   * @param info contains information about the assertion.
+   * @param actual the given array.
+   * @param boundary  the given value to compare the size of {@code actual} to.
+   * @throws AssertionError if the given array is {@code null}.
+   * @throws AssertionError if the number of elements in the given array is not less than or equal to the boundary.
+   */
+  public void assertHasSizeLessThanOrEqualTo(AssertionInfo info, double[] actual, int boundary) {
+    arrays.assertHasSizeLessThanOrEqualTo(info, actual, boundary);
+  }
+
+  /**
+   * Asserts that the number of elements in the given array is between the given lower and higher boundary (inclusive).
+   *
+   * @param info contains information about the assertion.
+   * @param actual the given array.
+   * @param lowerBoundary the lower boundary compared to which actual size should be greater than or equal to.
+   * @param higherBoundary the higher boundary compared to which actual size should be less than or equal to.
+   * @throws AssertionError if the given array is {@code null}.
+   * @throws AssertionError if the number of elements in the given array is not between the boundaries.
+   */
+  public void assertHasSizeBetween(AssertionInfo info, double[] actual, int lowerBoundary, int higherBoundary) {
+    arrays.assertHasSizeBetween(info, actual, lowerBoundary, higherBoundary);
   }
 
   /**
@@ -214,9 +285,13 @@ public class DoubleArrays {
   }
 
   public void assertContainsExactly(AssertionInfo info, double[] actual, double[] values) {
-	arrays.assertContainsExactly(info, failures, actual, values);
+    arrays.assertContainsExactly(info, failures, actual, values);
   }
-  
+
+  public void assertContainsExactlyInAnyOrder(AssertionInfo info, double[] actual, double[] values) {
+    arrays.assertContainsExactlyInAnyOrder(info, failures, actual, values);
+  }
+
   /**
    * Verifies that the given array contains the given sequence of values, without any other values between them.
    * 
@@ -328,7 +403,11 @@ public class DoubleArrays {
    * @param comparator the {@link Comparator} used to compare array elements
    */
   public void assertIsSortedAccordingToComparator(AssertionInfo info, double[] actual,
-      Comparator<? super Double> comparator) {
+                                                  Comparator<? super Double> comparator) {
     Arrays.assertIsSortedAccordingToComparator(info, failures, actual, comparator);
+  }
+
+  public void assertContainsAnyOf(AssertionInfo info, double[] actual, double[] values) {
+    arrays.assertContainsAnyOf(info, failures, actual, values);
   }
 }

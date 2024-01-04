@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.error;
 
@@ -24,7 +24,7 @@ import org.assertj.core.description.TextDescription;
 import org.assertj.core.internal.ComparatorBasedComparisonStrategy;
 import org.assertj.core.presentation.StandardRepresentation;
 import org.assertj.core.util.CaseInsensitiveStringComparator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for
@@ -76,7 +76,7 @@ public class ShouldContainOnly_create_Test {
                                          + "  <[\"Luke\"]>%n"
                                          + "and elements not expected:%n"
                                          + "  <[\"Han\"]>%n"
-                                         + "when comparing values using 'CaseInsensitiveStringComparator'"));
+                                         + "when comparing values using CaseInsensitiveStringComparator"));
   }
 
   @Test
@@ -114,7 +114,7 @@ public class ShouldContainOnly_create_Test {
                                          + "  <[\"Luke\", \"Yoda\"]>%n"
                                          + "but could not find the following elements:%n"
                                          + "  <[\"Luke\"]>%n"
-                                         + "when comparing values using 'CaseInsensitiveStringComparator'"));
+                                         + "when comparing values using CaseInsensitiveStringComparator"));
   }
 
   @Test
@@ -152,6 +152,6 @@ public class ShouldContainOnly_create_Test {
                                          + "  <[\"Yoda\"]>%n"
                                          + "but the following elements were unexpected:%n"
                                          + "  <[\"Leia\"]>%n"
-                                         + "when comparing values using 'CaseInsensitiveStringComparator'"));
+                                         + "when comparing values using CaseInsensitiveStringComparator"));
   }
 }

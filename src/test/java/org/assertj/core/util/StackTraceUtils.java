@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,9 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util;
+
+import java.util.Arrays;
 
 public class StackTraceUtils {
 
@@ -21,11 +23,7 @@ public class StackTraceUtils {
    * @return true if given {@link Throwable} stack trace contains AssertJ related elements, false otherwise.
    */
   public static boolean hasStackTraceElementRelatedToAssertJ(Throwable throwable) {
-    StackTraceElement[] stackTrace = throwable.getStackTrace();
-    for (StackTraceElement stackTraceElement : stackTrace) {
-      if (stackTraceElement.getClassName().contains("org.assert")) return true;
-    }
-    return false;
+    return Arrays.stream(throwable.getStackTrace())
+                 .anyMatch(stackTraceElement -> stackTraceElement.getClassName().contains("org.assertj"));
   }
-
 }

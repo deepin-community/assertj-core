@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,7 +8,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.api.iterable;
 
@@ -16,9 +16,11 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.test.AlwaysEqualComparator.ALWAY_EQUALS_STRING;
 import static org.assertj.core.util.Lists.newArrayList;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,14 +29,15 @@ import org.assertj.core.api.IterableAssertBaseTest;
 import org.assertj.core.internal.ComparatorBasedComparisonStrategy;
 import org.assertj.core.internal.IterableElementComparisonStrategy;
 import org.assertj.core.internal.Iterables;
-import org.junit.Before;
-import org.junit.Test;
+import org.assertj.core.test.Jedi;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class IterableAssert_usingFieldByFieldElementComparator_Test extends IterableAssertBaseTest {
 
   private Iterables iterablesBefore;
 
-  @Before
+  @BeforeEach
   public void before() {
     iterablesBefore = getIterables(assertions);
   }
@@ -47,8 +50,8 @@ public class IterableAssert_usingFieldByFieldElementComparator_Test extends Iter
   @Override
   protected void verify_internal_effects() {
     assertThat(iterablesBefore).isNotSameAs(getIterables(assertions));
-    assertThat(getIterables(assertions).getComparisonStrategy() instanceof ComparatorBasedComparisonStrategy).isTrue();
-    assertThat(getObjects(assertions).getComparisonStrategy() instanceof IterableElementComparisonStrategy).isTrue();
+    assertThat(getIterables(assertions).getComparisonStrategy()).isInstanceOf(ComparatorBasedComparisonStrategy.class);
+    assertThat(getObjects(assertions).getComparisonStrategy()).isInstanceOf(IterableElementComparisonStrategy.class);
   }
 
   @Test
@@ -97,48 +100,100 @@ public class IterableAssert_usingFieldByFieldElementComparator_Test extends Iter
   }
 
   @Test
+  public void successful_containsExactlyInAnyOrder_assertion_using_field_by_field_element_comparator_with_heterogeneous_list() {
+    Snake snake = new Snake(15);
+    List<Animal> list1 = newArrayList(new Bird("White"), snake, snake);
+    assertThat(list1).usingFieldByFieldElementComparator().containsExactlyInAnyOrder(new Snake(15), new Bird("White"),
+                                                                                     new Snake(15));
+  }
+
+  @Test
+  public void successful_containsExactlyInAnyOrderElementsOf_assertion_using_field_by_field_element_comparator_with_heterogeneous_list() {
+    Snake snake = new Snake(15);
+    List<Animal> list1 = newArrayList(new Bird("White"), snake, snake);
+    assertThat(list1).usingFieldByFieldElementComparator().containsExactlyInAnyOrderElementsOf(
+                                                                                               newArrayList(new Snake(15),
+                                                                                                            new Bird("White"),
+                                                                                                            new Snake(15)));
+  }
+
+  @Test
   public void successful_containsOnly_assertion_using_field_by_field_element_comparator_with_unordered_list() {
+    // GIVEN
     Person goodObiwan = new Person("Obi-Wan", "Kenobi", "good man");
     Person badObiwan = new Person("Obi-Wan", "Kenobi", "bad man");
-
+    // WHEN
     List<Person> list = asList(goodObiwan, badObiwan);
-    assertThat(list).usingFieldByFieldElementComparator().containsOnly(badObiwan, goodObiwan);
+    // THEN
+    assertThat(list).usingFieldByFieldElementComparator()
+                    .containsOnly(badObiwan, goodObiwan);
   }
 
   @Test
   public void failed_isEqualTo_assertion_using_field_by_field_element_comparator() {
     List<Foo> list1 = singletonList(new Foo("id", 1));
     List<Foo> list2 = singletonList(new Foo("id", 2));
-    try {
-      assertThat(list1).usingFieldByFieldElementComparator().isEqualTo(list2);
-    } catch (AssertionError e) {
-      // @format:off
-      assertThat(e).hasMessage(format("%nExpecting:%n" +
-                                      " <[Foo(id=id, bar=1)]>%n" +
-                                      "to be equal to:%n" +
-                                      " <[Foo(id=id, bar=2)]>%n" +
-                                      "when comparing elements using 'field by field comparator on all fields' but was not."));
-      // @format:on
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> assertThat(list1).usingFieldByFieldElementComparator()
+                                                                                      .isEqualTo(list2))
+                                                   .withMessage(format("%nExpecting:%n"
+                                                                       + " <[Foo(id=id, bar=1)]>%n"
+                                                                       + "to be equal to:%n"
+                                                                       + " <[Foo(id=id, bar=2)]>%n"
+                                                                       + "when comparing elements using field/property by field/property comparator on all fields/properties%n"
+                                                                       + "Comparators used:%n"
+                                                                       + "- for elements fields (by type): {Double -> DoubleComparator[precision=1.0E-15], Float -> FloatComparator[precision=1.0E-6]}%n"
+                                                                       + "- for elements (by type): {Double -> DoubleComparator[precision=1.0E-15], Float -> FloatComparator[precision=1.0E-6]}%n"
+                                                                       + "but was not."));
   }
 
   @Test
   public void failed_isIn_assertion_using_field_by_field_element_comparator() {
     List<Foo> list1 = singletonList(new Foo("id", 1));
     List<Foo> list2 = singletonList(new Foo("id", 2));
-    try {
-      assertThat(list1).usingFieldByFieldElementComparator().isIn(singletonList(list2));
-    } catch (AssertionError e) {
-      assertThat(e).hasMessage(String.format("%nExpecting:%n" +
-                                             " <[Foo(id=id, bar=1)]>%n" +
-                                             "to be in:%n" +
-                                             " <[[Foo(id=id, bar=2)]]>%n" +
-                                             "when comparing elements using 'field by field comparator on all fields'"));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> assertThat(list1).usingFieldByFieldElementComparator()
+                                                                                      .isIn(singletonList(list2)))
+                                                   .withMessage(format("%nExpecting:%n"
+                                                                       + " <[Foo(id=id, bar=1)]>%n"
+                                                                       + "to be in:%n"
+                                                                       + " <[[Foo(id=id, bar=2)]]>%n"
+                                                                       + "when comparing elements using field/property by field/property comparator on all fields/properties%n"
+                                                                       + "Comparators used:%n"
+                                                                       + "- for elements fields (by type): {Double -> DoubleComparator[precision=1.0E-15], Float -> FloatComparator[precision=1.0E-6]}%n"
+                                                                       + "- for elements (by type): {Double -> DoubleComparator[precision=1.0E-15], Float -> FloatComparator[precision=1.0E-6]}"));
+  }
+
+  @Test
+  public void should_be_able_to_use_a_comparator_for_specified_fields_of_elements_when_using_field_by_field_element_comparator() {
+    Jedi actual = new Jedi("Yoda", "green");
+    Jedi other = new Jedi("Luke", "green");
+
+    assertThat(singletonList(actual)).usingComparatorForElementFieldsWithNames(ALWAY_EQUALS_STRING, "name")
+                                     .usingFieldByFieldElementComparator()
+                                     .contains(other);
+  }
+
+  @Test
+  public void comparators_for_element_field_names_should_have_precedence_over_comparators_for_element_field_types_when_using_field_by_field_element_comparator() {
+    Comparator<String> comparator = (o1, o2) -> o1.compareTo(o2);
+    Jedi actual = new Jedi("Yoda", "green");
+    Jedi other = new Jedi("Luke", "green");
+
+    assertThat(singletonList(actual)).usingComparatorForElementFieldsWithNames(ALWAY_EQUALS_STRING, "name")
+                                     .usingComparatorForElementFieldsWithType(comparator, String.class)
+                                     .usingFieldByFieldElementComparator()
+                                     .contains(other);
+  }
+
+  @Test
+  public void should_be_able_to_use_a_comparator_for_element_fields_with_specified_type_when_using_field_by_field_element_comparator() {
+    Jedi actual = new Jedi("Yoda", "green");
+    Jedi other = new Jedi("Luke", "blue");
+
+    assertThat(singletonList(actual)).usingComparatorForElementFieldsWithType(ALWAY_EQUALS_STRING, String.class)
+                                     .usingFieldByFieldElementComparator()
+                                     .contains(other);
   }
 
   public static class Foo {
@@ -182,6 +237,13 @@ public class IterableAssert_usingFieldByFieldElementComparator_Test extends Iter
     public String getColor() {
       return color;
     }
+
+    @Override
+    public String toString() {
+      return "Bird{" +
+             "color='" + color + '\'' +
+             '}';
+    }
   }
 
   private static class Snake extends Animal {
@@ -195,6 +257,13 @@ public class IterableAssert_usingFieldByFieldElementComparator_Test extends Iter
     @SuppressWarnings("unused")
     public int getLength() {
       return length;
+    }
+
+    @Override
+    public String toString() {
+      return "Snake{" +
+             "length=" + length +
+             '}';
     }
   }
 
@@ -212,12 +281,14 @@ public class IterableAssert_usingFieldByFieldElementComparator_Test extends Iter
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       Person person = (Person) o;
-      return Objects.equals(first, person.first) && Objects.equals(last, person.last);
+      return Objects.equals(first, person.first)
+             && Objects.equals(last, person.last)
+             && Objects.equals(info, person.info);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(first, last);
+      return Objects.hash(first, last, info);
     }
 
     @Override

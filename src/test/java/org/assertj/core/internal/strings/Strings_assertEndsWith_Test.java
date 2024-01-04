@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,22 +8,20 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.strings;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldEndWith.shouldEndWith;
 import static org.assertj.core.test.TestData.someInfo;
-import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
-
-
-import static org.mockito.Mockito.verify;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.Strings;
 import org.assertj.core.internal.StringsBaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -36,26 +34,20 @@ public class Strings_assertEndsWith_Test extends StringsBaseTest {
 
   @Test
   public void should_fail_if_actual_does_not_end_with_suffix() {
-    AssertionInfo info = someInfo();
-    try {
-      strings.assertEndsWith(info, "Yoda", "Luke");
-    } catch (AssertionError e) {
-      verify(failures).failure(info, shouldEndWith("Yoda", "Luke"));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> strings.assertEndsWith(someInfo(), "Yoda", "Luke"))
+                                                   .withMessage(shouldEndWith("Yoda", "Luke").create());
   }
 
   @Test
   public void should_throw_error_if_suffix_is_null() {
-    thrown.expectNullPointerException("The given suffix should not be null");
-    strings.assertEndsWith(someInfo(), "Yoda", null);
+    assertThatNullPointerException().isThrownBy(() -> strings.assertEndsWith(someInfo(), "Yoda", null))
+                                       .withMessage("The given suffix should not be null");
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    strings.assertEndsWith(someInfo(), null, "Yoda");
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> strings.assertEndsWith(someInfo(), null, "Yoda"))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
@@ -74,14 +66,8 @@ public class Strings_assertEndsWith_Test extends StringsBaseTest {
 
   @Test
   public void should_fail_if_actual_does_not_end_with_suffix_according_to_custom_comparison_strategy() {
-    AssertionInfo info = someInfo();
-    try {
-      stringsWithCaseInsensitiveComparisonStrategy.assertEndsWith(info, "Yoda", "Luke");
-    } catch (AssertionError e) {
-      verify(failures).failure(info, shouldEndWith("Yoda", "Luke", comparisonStrategy));
-      return;
-    }
-    failBecauseExpectedAssertionErrorWasNotThrown();
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> stringsWithCaseInsensitiveComparisonStrategy.assertEndsWith(someInfo(), "Yoda", "Luke"))
+                                                   .withMessage(shouldEndWith("Yoda", "Luke", comparisonStrategy).create());
   }
 
 }

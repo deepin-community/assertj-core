@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,15 +8,18 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.description;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.test.EqualsHashCodeContractAssert.*;
+import static org.assertj.core.test.EqualsHashCodeContractAssert.assertEqualsIsReflexive;
+import static org.assertj.core.test.EqualsHashCodeContractAssert.assertEqualsIsSymmetric;
+import static org.assertj.core.test.EqualsHashCodeContractAssert.assertEqualsIsTransitive;
+import static org.assertj.core.test.EqualsHashCodeContractAssert.assertMaintainsEqualsAndHashCodeContract;
 
-import org.assertj.core.description.TextDescription;
-import org.junit.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link TextDescription#equals(Object)}</code> and <code>{@link TextDescription#hashCode()}</code>.
@@ -27,7 +30,7 @@ public class TextDescription_equals_hashCode_Test {
 
   private static TextDescription description;
 
-  @BeforeClass
+  @BeforeAll
   public static void setUpOnce() {
     description = new TextDescription("Yoda");
   }

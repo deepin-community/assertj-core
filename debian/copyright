@@ -1,6 +1,9 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: AssertJ Core
 Source: https://github.com/joel-costigliola/assertj-core
+Files-Excluded: .mvn/*
+                mvnw*
+                .github
 
 Files: *
 Copyright: 2014-2016, Joel Costigliola

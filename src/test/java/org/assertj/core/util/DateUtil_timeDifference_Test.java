@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,20 +8,18 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.test.ExpectedException.none;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.util.DateUtil.parseDatetimeWithMs;
 import static org.assertj.core.util.DateUtil.timeDifference;
 
 import java.util.Date;
 
-import org.assertj.core.test.ExpectedException;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for <code>{@link org.assertj.core.util.DateUtil#timeDifference(java.util.Date, java.util.Date)}</code>.
@@ -29,9 +27,6 @@ import org.junit.Test;
  * @author Joel Costigliola
  */
 public class DateUtil_timeDifference_Test {
-
-  @Rule
-  public ExpectedException thrown = none();
 
   @Test
   public void should_return_dates_time_difference() {
@@ -43,14 +38,14 @@ public class DateUtil_timeDifference_Test {
 
   @Test
   public void should_throws_IllegalArgumentException_if_first_date_parameter_is_null() {
-    thrown.expectIllegalArgumentException("Expecting date parameter not to be null");
-    timeDifference(new Date(), null);
+    assertThatIllegalArgumentException().isThrownBy(() -> timeDifference(new Date(), null))
+                                        .withMessage("Expecting date parameter not to be null");
   }
 
   @Test
   public void should_throws_IllegalArgumentException_if_second_date_parameter_is_null() {
-    thrown.expectIllegalArgumentException("Expecting date parameter not to be null");
-    timeDifference(null, new Date());
+    assertThatIllegalArgumentException().isThrownBy(() -> timeDifference(null, new Date()))
+                                        .withMessage("Expecting date parameter not to be null");
   }
 
 }

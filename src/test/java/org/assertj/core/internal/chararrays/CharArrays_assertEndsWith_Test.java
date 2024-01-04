@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,24 +8,25 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal.chararrays;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.error.ShouldEndWith.shouldEndWith;
-import static org.assertj.core.test.CharArrays.*;
-import static org.assertj.core.test.ErrorMessages.*;
+import static org.assertj.core.internal.ErrorMessages.valuesToLookForIsNull;
+import static org.assertj.core.test.CharArrays.arrayOf;
+import static org.assertj.core.test.CharArrays.emptyArray;
 import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.test.TestFailures.failBecauseExpectedAssertionErrorWasNotThrown;
 import static org.assertj.core.util.FailureMessages.actualIsNull;
-
-
 import static org.mockito.Mockito.verify;
 
 import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.CharArrays;
 import org.assertj.core.internal.CharArraysBaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -33,6 +34,7 @@ import org.junit.Test;
  * 
  * @author Alex Ruiz
  * @author Joel Costigliola
+ * @author Florent Biville
  */
 public class CharArrays_assertEndsWith_Test extends CharArraysBaseTest {
 
@@ -43,8 +45,8 @@ public class CharArrays_assertEndsWith_Test extends CharArraysBaseTest {
 
   @Test
   public void should_throw_error_if_sequence_is_null() {
-    thrown.expectNullPointerException(valuesToLookForIsNull());
-    arrays.assertEndsWith(someInfo(), actual, null);
+    assertThatNullPointerException().isThrownBy(() -> arrays.assertEndsWith(someInfo(), actual, null))
+                                    .withMessage(valuesToLookForIsNull());
   }
 
   @Test
@@ -54,15 +56,14 @@ public class CharArrays_assertEndsWith_Test extends CharArraysBaseTest {
   }
   
   @Test
-  public void should_fail_if_array_of_values_to_look_for_is_empty_and_actual_is_not() {
-    thrown.expect(AssertionError.class);
+  public void should_pass_if_array_of_values_to_look_for_is_empty_and_actual_is_not() {
     arrays.assertEndsWith(someInfo(), actual, emptyArray());
   }
 
   @Test
   public void should_fail_if_actual_is_null() {
-    thrown.expectAssertionError(actualIsNull());
-    arrays.assertEndsWith(someInfo(), null, arrayOf('a'));
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arrays.assertEndsWith(someInfo(), null, arrayOf('a')))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test
@@ -116,20 +117,21 @@ public class CharArrays_assertEndsWith_Test extends CharArraysBaseTest {
 
   @Test
   public void should_throw_error_if_sequence_is_null_whatever_custom_comparison_strategy_is() {
-    thrown.expectNullPointerException(valuesToLookForIsNull());
-    arraysWithCustomComparisonStrategy.assertEndsWith(someInfo(), actual, null);
+    assertThatNullPointerException().isThrownBy(() -> arraysWithCustomComparisonStrategy.assertEndsWith(someInfo(),
+                                                                                                                             actual,
+                                                                                                                             null))
+                                                         .withMessage(valuesToLookForIsNull());
   }
 
   @Test
-  public void should_fail_if_array_of_values_to_look_for_is_empty_and_actual_is_not_whatever_custom_comparison_strategy_is() {
-    thrown.expect(AssertionError.class);
+  public void should_pass_if_array_of_values_to_look_for_is_empty_and_actual_is_not_whatever_custom_comparison_strategy_is() {
     arraysWithCustomComparisonStrategy.assertEndsWith(someInfo(), actual, emptyArray());
   }
 
   @Test
   public void should_fail_if_actual_is_null_whatever_custom_comparison_strategy_is() {
-    thrown.expectAssertionError(actualIsNull());
-    arraysWithCustomComparisonStrategy.assertEndsWith(someInfo(), null, arrayOf('A'));
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> arraysWithCustomComparisonStrategy.assertEndsWith(someInfo(), null, arrayOf('A')))
+                                                   .withMessage(actualIsNull());
   }
 
   @Test

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,11 +8,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.internal;
 
-import static org.assertj.core.test.ExpectedException.none;
+import static org.assertj.core.test.TestData.someInfo;
 import static org.assertj.core.util.Lists.newArrayList;
 
 
@@ -20,14 +20,13 @@ import static org.mockito.Mockito.spy;
 
 import java.util.List;
 
+import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.internal.ComparatorBasedComparisonStrategy;
 import org.assertj.core.internal.Failures;
 import org.assertj.core.internal.Iterables;
 import org.assertj.core.internal.StandardComparisonStrategy;
-import org.assertj.core.test.ExpectedException;
 import org.assertj.core.util.CaseInsensitiveStringComparator;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.BeforeEach;
 
 
 /**
@@ -41,9 +40,6 @@ import org.junit.Rule;
  */
 public class IterablesBaseTest {
 
-  @Rule
-  public ExpectedException thrown = none();
-
   protected List<String> actual;
   protected Failures failures;
   protected Iterables iterables;
@@ -51,7 +47,9 @@ public class IterablesBaseTest {
   protected ComparatorBasedComparisonStrategy comparisonStrategy;
   protected Iterables iterablesWithCaseInsensitiveComparisonStrategy;
 
-  @Before
+  protected AssertionInfo info;
+
+  @BeforeEach
   public void setUp() {
     actual = newArrayList("Luke", "Yoda", "Leia");
     failures = spy(new Failures());
@@ -60,6 +58,7 @@ public class IterablesBaseTest {
     comparisonStrategy = new ComparatorBasedComparisonStrategy(CaseInsensitiveStringComparator.instance);
     iterablesWithCaseInsensitiveComparisonStrategy = new Iterables(comparisonStrategy);
     iterablesWithCaseInsensitiveComparisonStrategy.failures = failures;
+    info = someInfo();
   }
 
 }

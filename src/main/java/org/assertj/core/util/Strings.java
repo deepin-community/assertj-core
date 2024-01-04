@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -8,14 +8,14 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  */
 package org.assertj.core.util;
 
 import static java.lang.String.format;
-import static org.assertj.core.util.Lists.newArrayList;
-
-import java.util.List;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
+import static org.assertj.core.util.Preconditions.checkArgument;
 
 /**
  * Utility methods related to {@code String}s.
@@ -67,11 +67,7 @@ public final class Strings {
     if (Arrays.isNullOrEmpty(objects)) {
       return null;
     }
-    StringBuilder b = new StringBuilder();
-    for (Object o : objects) {
-      b.append(o);
-    }
-    return b.toString();
+    return stream(objects).map(String::valueOf).collect(joining());
   }
 
   /**
@@ -84,11 +80,20 @@ public final class Strings {
    */
   public static String formatIfArgs(String message, Object... args) {
     return Arrays.isNullOrEmpty(args)
-            // here we need to format %n but not other % since we do not have arguments. %% is formatted to % so
-            // replacing % into %% and then format it will have no effect. Nevertheless, we want to format %n
-            // correctly so we replace all % to %% except if they are followed by a 'n'.
-            ? format(message.replaceAll("%([^n])","%%$1"))
-            : format (message, args);
+        // here we need to format %n but not other % since we do not have arguments.
+        // => we replace all % to %% except if they are followed by a 'n'.
+        ? format(escapePercentExceptWhenFollowedBy_n(message))
+        : format(message, args);
+  }
+
+  /**
+   * Escape any {@code %} to {@code %%} to avoid interpreting it in {@link String#format(String, Object...)}.
+   *  
+   * @param value the String to escape
+   * @return the escaped String 
+   */
+  public static String escapePercent(String value) {
+    return value == null ? null : value.replace("%", "%%");
   }
 
   /**
@@ -118,11 +123,8 @@ public final class Strings {
    * @see StringsToJoin#with(String)
    */
   public static StringsToJoin join(Iterable<?> toStringable) {
-    List<String> strings = newArrayList();
-    for (Object o : toStringable) {
-      strings.add(String.valueOf(o));
-    }
-    return new StringsToJoin(strings.toArray(new String[strings.size()]));
+    String[] strings = Streams.stream(toStringable).map(String::valueOf).toArray(String[]::new);
+    return new StringsToJoin(strings);
   }
 
   /**
@@ -155,15 +157,14 @@ public final class Strings {
     }
 
     /**
-     * Specifies the delimiter to use to join {@code String}s.
+     * Specifies the delimiter to use to join {@code String}s and the escape String to wrap strings with.
      * 
      * @param delimiter the delimiter to use.
+     * @param escapeString the String wrapper to use.
      * @return the {@code String}s joined using the given delimiter.
      */
     public String with(String delimiter, String escapeString) {
-      if (delimiter == null) {
-        throw new IllegalArgumentException("Delimiter should not be null");
-      }
+      checkArgument(delimiter != null, "Delimiter should not be null");
       if (Arrays.isNullOrEmpty(strings)) {
         return "";
       }
@@ -227,6 +228,15 @@ public final class Strings {
     }
   }
 
-  private Strings() {
+  // change %%n back to %n which could have been done by calling escapePercent
+  private static String escapePercentExceptWhenFollowedBy_n(String message) {
+    return revertEscapingPercent_n(escapePercent(message));
   }
+
+  private static String revertEscapingPercent_n(String value) {
+    return value == null ? null : value.replace("%%n", "%n");
+  }
+
+  private Strings() {}
+
 }
