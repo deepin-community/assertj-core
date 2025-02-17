@@ -1,1 +1,3 @@
 01-ignore-module.patch
+02-replace-mockito-bom.patch
+03-replace-junit-bom.patch
