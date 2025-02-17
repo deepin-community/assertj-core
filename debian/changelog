@@ -1,3 +1,20 @@
+assertj-core (3.26.3-2) unstable; urgency=medium
+
+  * Ignore the test dependency on commons-collections4 (Closes: #1086257)
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 29 Oct 2024 20:18:38 +0100
+
+assertj-core (3.26.3-1) unstable; urgency=medium
+
+  * New upstream release
+    - Refreshed the patch
+    - Updated the Maven rules
+    - Build the new Maven modules
+  * Updated the watch file
+  * Standards-Version updated to 4.7.0
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 22 Oct 2024 19:16:26 +0200
+
 assertj-core (3.14.0-2) unstable; urgency=medium
 
   * Don't build the module-info class

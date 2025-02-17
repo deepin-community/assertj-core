@@ -26,3 +26,8 @@
 #     Empty by default. [mh_install]
 #
 pom.xml --no-parent --has-package-version
+assertj-bom/pom.xml --has-package-version
+assertj-core/pom.xml --has-package-version
+assertj-guava/pom.xml --has-package-version
+assertj-parent/pom.xml --has-package-version
+assertj-tests/pom.xml --ignore
