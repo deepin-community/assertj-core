@@ -1,3 +1,9 @@
+assertj-core (3.14.0-2deepin1) unstable; urgency=medium
+
+  * CVE-2026-24400: Fix XXE vulnerability in XmlStringPrettyFormatter
+
+ -- deepin-ci-robot <packages@deepin.org>  Mon, 27 Apr 2026 15:16:09 +0800
+
 assertj-core (3.14.0-2) unstable; urgency=medium
 
   * Don't build the module-info class
@@ -21,7 +27,7 @@ assertj-core (2.3.0-4) unstable; urgency=medium
   * Standards-Version updated to 4.0.0
   * Switch to debhelper level 10
 
- -- Emmanuel Bourg <ebourg@apache.org>  Fri, 30 Jun 2017 11:40:08 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Fri, 30 Jun 2017 11:05:08 +0200
 
 assertj-core (2.3.0-3) unstable; urgency=medium
 
